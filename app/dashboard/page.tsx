@@ -44,15 +44,16 @@ export default async function DashboardLaunchpad() {
   const supabase = await getSupabase();
 
   /* ── Fetch events data ────────────────────────────────────────── */
-  const { data: persons } = await supabase
-    .from("persons")
-    .select(
-      "id, full_name, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased",
-    );
-
-  const { data: customEvents } = await supabase
-    .from("custom_events")
-    .select("id, name, content, event_date, location, created_by");
+  const [{ data: persons }, { data: customEvents }] = await Promise.all([
+    supabase
+      .from("persons")
+      .select(
+        "id, full_name, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased",
+      ),
+    supabase
+      .from("custom_events")
+      .select("id, name, content, event_date, location, created_by"),
+  ]);
 
   const allEvents = computeEvents(persons ?? [], customEvents ?? []);
   const upcomingEvents = allEvents.filter(
