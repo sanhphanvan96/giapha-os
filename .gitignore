@@ -46,3 +46,7 @@ next-env.d.ts
 .agents/
 .agent/
 skills-lock.json
+
+# private data
+data/
+docs/sample/
