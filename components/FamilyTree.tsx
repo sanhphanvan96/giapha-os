@@ -235,10 +235,13 @@ export default function FamilyTree({
 
             {data.spouses.length > 0 &&
               data.spouses.map((spouseData, idx) => (
-                <div key={spouseData.person.id} className="flex relative">
+                <div key={spouseData.person.id} className="flex items-center relative">
+                  <div
+                    className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-medium text-stone-500 shrink-0${showAvatar ? " shadow-sm bg-white" : ""}`}
+                  >
+                    <span className="leading-none">{idx === 0 ? "💍" : "+"}</span>
+                  </div>
                   <FamilyNodeCard
-                    isRingVisible={idx === 0}
-                    isPlusVisible={idx > 0}
                     person={spouseData.person}
                     role={spouseData.person.gender === "male" ? "Chồng" : "Vợ"}
                     note={spouseData.note}
