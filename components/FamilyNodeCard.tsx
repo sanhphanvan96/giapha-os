@@ -12,8 +12,6 @@ interface FamilyNodeCardProps {
   note?: string | null;
   onClickCard?: () => void;
   onClickName?: (e: React.MouseEvent) => void;
-  isRingVisible?: boolean;
-  isPlusVisible?: boolean;
   level: number;
 }
 
@@ -21,8 +19,6 @@ export default function FamilyNodeCard({
   person,
   onClickCard,
   onClickName,
-  isRingVisible = false,
-  isPlusVisible = false,
 }: FamilyNodeCardProps) {
   const { showAvatar, setMemberModalId } = useMemberListView();
 
@@ -37,27 +33,6 @@ export default function FamilyNodeCard({
         ${showAvatar ? "w-20 sm:w-24 md:w-28 bg-surface/70 backdrop-blur-xl hover:shadow-soft-hover" : "px-3"}
       `}
     >
-      {isRingVisible && (
-        <div
-          className={`
-            absolute top-[15%] -left-2.5 sm:-left-3.5 size-5 sm:size-6 rounded-full z-100 flex items-center justify-center text-[10px] sm:text-sm font-medium text-stone-500
-            ${showAvatar ? "shadow-sm bg-white" : ""}
-          `}
-        >
-          <span className="leading-none">💍</span>
-        </div>
-      )}
-      {isPlusVisible && (
-        <div
-          className={`
-            absolute top-[15%] -left-2.5 sm:-left-3.5 size-5 sm:size-6 rounded-full z-100 flex items-center justify-center text-[10px] sm:text-sm font-medium text-stone-500
-            ${showAvatar ? "shadow-sm bg-white" : ""}
-          `}
-        >
-          <span className="leading-none">+</span>
-        </div>
-      )}
-
       {/* 1. Avatar */}
       {showAvatar && (
         <div className="relative z-10 mb-1.5 sm:mb-2">
