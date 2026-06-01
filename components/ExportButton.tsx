@@ -1,8 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { toJpeg, toPng } from "html-to-image";
-import jsPDF from "jspdf";
 import {
   AlertCircle,
   Download,
@@ -58,6 +56,7 @@ export default function ExportButton() {
       };
 
       if (format === "png") {
+        const { toPng } = await import("html-to-image");
         const url = await toPng(element, exportOptions);
         const a = document.createElement("a");
         a.href = url;
@@ -66,6 +65,10 @@ export default function ExportButton() {
         a.click();
         document.body.removeChild(a);
       } else if (format === "pdf") {
+        const [{ toJpeg }, { default: jsPDF }] = await Promise.all([
+          import("html-to-image"),
+          import("jspdf"),
+        ]);
         const imgData = await toJpeg(element, {
           ...exportOptions,
           quality: 0.95,
