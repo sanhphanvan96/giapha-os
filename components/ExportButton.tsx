@@ -61,7 +61,7 @@ export default function ExportButton() {
         const url = await toPng(element, exportOptions);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `giapha-sodo-${new Date().toISOString().split("T")[0]}.png`;
+        a.download = `giapha-sodo-${new Date().toISOString().replace("T", "-").replace(/:/g, "").split(".")[0]}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -85,13 +85,13 @@ export default function ExportButton() {
           format: [width, height],
         });
         pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-        pdf.save(`giapha-sodo-${new Date().toISOString().split("T")[0]}.pdf`);
+        pdf.save(`giapha-sodo-${new Date().toISOString().replace("T", "-").replace(/:/g, "").split(".")[0]}.pdf`);
       } else if (format === "svg") {
         const { toSvg } = await import("html-to-image");
         const url = await toSvg(element, exportOptions);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `giapha-sodo-${new Date().toISOString().split("T")[0]}.svg`;
+        a.download = `giapha-sodo-${new Date().toISOString().replace("T", "-").replace(/:/g, "").split(".")[0]}.svg`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
