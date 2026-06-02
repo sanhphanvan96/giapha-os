@@ -13,6 +13,10 @@ bun run lint       # run eslint
 
 This project uses **Bun** as the package manager. Do not use npm or yarn.
 
+## Git
+
+Never commit or push unless the user explicitly asks.
+
 ## Environment
 
 Copy `.env.example` to `.env.local` and fill in the Supabase credentials:
