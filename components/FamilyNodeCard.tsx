@@ -74,13 +74,28 @@ export default function FamilyNodeCard({
             }
           }}
         >
-          {showAvatar
-            ? person.full_name
-            : person.full_name.split(" ").map((word, i) => (
+          {(() => {
+            const parts = person.full_name.trim().split(" ");
+            if (showAvatar && parts.length >= 3) {
+              const mid = Math.ceil(parts.length / 2);
+              const line1 = parts.slice(0, mid).join(" ");
+              const line2 = parts.slice(mid).join(" ");
+              return (
+                <>
+                  <span className="block">{line1}</span>
+                  <span className="block">{line2}</span>
+                </>
+              );
+            }
+            if (!showAvatar) {
+              return parts.map((word, i) => (
                 <span key={i} className="block">
                   {word}
                 </span>
-              ))}
+              ));
+            }
+            return person.full_name;
+          })()}
         </div>
       </div>
     </div>

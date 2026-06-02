@@ -229,18 +229,18 @@ export default function FamilyTree({
     return (
       <li>
         <div
-          className="node-container inline-flex flex-col items-center"
+          className="node-container inline-flex flex-col items-center relative"
           data-level={level}
         >
           {/* Main Person & Spouses Row */}
           <div
-            className={`flex relative z-10 items-stretch h-full${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
+            className={`flex z-10 items-stretch h-full pb-4${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
           >
             <FamilyNodeCard person={data.person} level={level} />
 
             {data.spouses.length > 0 &&
               data.spouses.map((spouseData, idx) => (
-                <div key={spouseData.person.id} className="flex items-center relative">
+                <div key={spouseData.person.id} className="flex items-center">
                   <div
                     className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-medium text-stone-500 shrink-0${showAvatar ? " shadow-sm bg-white" : ""}`}
                   >
@@ -254,35 +254,35 @@ export default function FamilyTree({
                   />
                 </div>
               ))}
+          </div>
 
-            {/* Expand/Collapse Toggle – centered on the row */}
-            {!hideExpandButtons && hasChildren && (
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
+          {/* Expand/Collapse Toggle – centered on node-container, not the row */}
+          {!hideExpandButtons && hasChildren && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                toggleCollapse(personId);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
                   e.stopPropagation();
                   e.preventDefault();
                   toggleCollapse(personId);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleCollapse(personId);
-                  }
-                }}
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white border border-stone-200/80 rounded-full size-6 flex items-center justify-center shadow-md z-100 text-stone-500 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
-                title={isCollapsed ? "Mở rộng" : "Thu gọn"}
-              >
-                {isCollapsed ? (
-                  <Plus className="w-3.5 h-3.5" />
-                ) : (
-                  <Minus className="w-3.5 h-3.5" />
-                )}
-              </div>
-            )}
-          </div>
+                }
+              }}
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white border border-stone-200/80 rounded-full size-6 flex items-center justify-center shadow-md z-[100] text-stone-500 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
+              title={isCollapsed ? "Mở rộng" : "Thu gọn"}
+            >
+              {isCollapsed ? (
+                <Plus className="w-3.5 h-3.5" />
+              ) : (
+                <Minus className="w-3.5 h-3.5" />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Render Children (if any and not collapsed) */}
