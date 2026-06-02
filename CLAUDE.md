@@ -13,6 +13,10 @@ bun run lint       # run eslint
 
 This project uses **Bun** as the package manager. Do not use npm or yarn.
 
+## Git
+
+Never commit or push unless the user explicitly asks.
+
 ## Environment
 
 Copy `.env.example` to `.env.local` and fill in the Supabase credentials:
@@ -61,7 +65,7 @@ Server components fetch data directly via `getSupabase()`. All mutations go thro
 
 ### View state
 
-`context/MemberListContext.tsx` (`MemberListProvider`) holds client-side view state for the members page: active modal, view mode (`list`/`tree`/`mindmap`), avatar visibility, and tree root. State is synced to URL search params so links are shareable.
+`context/MemberListContext.tsx` (`MemberListProvider`) holds client-side view state for the members page: active modal, view mode (`tree`/`mindmap`/`bubble`/`list`, default `tree`), avatar visibility, tree root, and all filter toggles (`hideDaughtersInLaw`, `hideSonsInLaw`, `hideDaughters`, `hideSons`, `hideMales`, `hideFemales`, `hideExpandButtons`, `autoCollapseLevel`). Filter state lives in context so it persists when switching between views. State is synced to URL search params so links are shareable.
 
 `components/UserProvider.tsx` exposes current user and profile via `useUser()` to client components.
 
@@ -75,6 +79,6 @@ All UI work must follow [`DESIGN.md`](DESIGN.md) strictly — do not invent new 
 
 Key design tokens:
 - **Colors:** primary `#1c1917`, secondary `#57534e`, tertiary/accent `#d97706` (amber), neutral bg `#fafaf9`, surface `#ffffff`, border `#e7e5e4`
-- **Typography:** Playfair Display for headings/branding, Inter for body and data
+- **Typography:** Be Vietnam Pro for all text (headings and body); single font, weights 400–800
 - **Shapes:** `rounded-2xl`/`rounded-3xl` for cards; `rounded-full` only for avatars and icon buttons
 - **Elevation:** achieved by stacking white (`bg-white/70 backdrop-blur-xl`) on the limestone neutral — avoid heavy drop shadows
