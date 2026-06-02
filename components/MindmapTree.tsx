@@ -9,8 +9,6 @@ import MindmapToolbar from "./MindmapToolbar";
 
 import { buildAdjacencyLists } from "@/utils/treeHelpers";
 
-const DEFAULT_AUTO_COLLAPSE_LEVEL = 2;
-
 interface MindmapTreeProps {
   personsMap: Map<string, Person>;
   relationships: Relationship[];
@@ -24,17 +22,26 @@ export default function MindmapTree({
   roots,
   canEdit,
 }: MindmapTreeProps) {
-  const { showAvatar, setMemberModalId } = useMemberListView();
-  const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);
-  const [hideSonsInLaw, setHideSonsInLaw] = useState(false);
-  const [hideDaughters, setHideDaughters] = useState(false);
-  const [hideSons, setHideSons] = useState(false);
-  const [hideMales, setHideMales] = useState(false);
-  const [hideFemales, setHideFemales] = useState(false);
-  const [hideExpandButtons, setHideExpandButtons] = useState(false);
-  const [autoCollapseLevel, setAutoCollapseLevel] = useState(
-    DEFAULT_AUTO_COLLAPSE_LEVEL,
-  );
+  const {
+    showAvatar,
+    setMemberModalId,
+    hideDaughtersInLaw,
+    setHideDaughtersInLaw,
+    hideSonsInLaw,
+    setHideSonsInLaw,
+    hideDaughters,
+    setHideDaughters,
+    hideSons,
+    setHideSons,
+    hideMales,
+    setHideMales,
+    hideFemales,
+    setHideFemales,
+    hideExpandButtons,
+    setHideExpandButtons,
+    autoCollapseLevel,
+    setAutoCollapseLevel,
+  } = useMemberListView();
   const [expandSignal, setExpandSignal] = useState<{
     type: "expand" | "collapse";
     ts: number;

@@ -15,6 +15,23 @@ interface MemberListViewState {
   setView: (view: ViewMode) => void;
   rootId: string | null;
   setRootId: (id: string | null) => void;
+  // Shared filter state (persists across view switches)
+  hideDaughtersInLaw: boolean;
+  setHideDaughtersInLaw: (val: boolean) => void;
+  hideSonsInLaw: boolean;
+  setHideSonsInLaw: (val: boolean) => void;
+  hideDaughters: boolean;
+  setHideDaughters: (val: boolean) => void;
+  hideSons: boolean;
+  setHideSons: (val: boolean) => void;
+  hideMales: boolean;
+  setHideMales: (val: boolean) => void;
+  hideFemales: boolean;
+  setHideFemales: (val: boolean) => void;
+  hideExpandButtons: boolean;
+  setHideExpandButtons: (val: boolean) => void;
+  autoCollapseLevel: number;
+  setAutoCollapseLevel: (val: number) => void;
 }
 
 export const MemberListContext = createContext<MemberListViewState | undefined>(
@@ -43,11 +60,21 @@ export function MemberListProvider({
     () => initialShowAvatar ?? searchParams.get("avatar") !== "hide",
   );
   const [view, setViewState] = useState<ViewMode>(
-    () => initialView ?? (searchParams.get("view") as ViewMode | null) ?? "list",
+    () => initialView ?? (searchParams.get("view") as ViewMode | null) ?? "tree",
   );
   const [rootId, setRootIdState] = useState<string | null>(
     () => initialRootId ?? searchParams.get("rootId") ?? null,
   );
+
+  // Shared filter state — persists when switching between Tree / Mindmap / Bubble
+  const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);
+  const [hideSonsInLaw, setHideSonsInLaw] = useState(false);
+  const [hideDaughters, setHideDaughters] = useState(false);
+  const [hideSons, setHideSons] = useState(false);
+  const [hideMales, setHideMales] = useState(false);
+  const [hideFemales, setHideFemales] = useState(false);
+  const [hideExpandButtons, setHideExpandButtons] = useState(false);
+  const [autoCollapseLevel, setAutoCollapseLevel] = useState(2);
 
   // Initialize from URL and listen to Next.js route changes
   useEffect(() => {
@@ -134,6 +161,22 @@ export function MemberListProvider({
         setView,
         rootId,
         setRootId,
+        hideDaughtersInLaw,
+        setHideDaughtersInLaw,
+        hideSonsInLaw,
+        setHideSonsInLaw,
+        hideDaughters,
+        setHideDaughters,
+        hideSons,
+        setHideSons,
+        hideMales,
+        setHideMales,
+        hideFemales,
+        setHideFemales,
+        hideExpandButtons,
+        setHideExpandButtons,
+        autoCollapseLevel,
+        setAutoCollapseLevel,
       }}
     >
       {children}
@@ -148,15 +191,31 @@ export function useMemberListView(): MemberListViewState {
   if (context === undefined) {
     return {
       memberModalId: null,
-      setMemberModalId: () => { },
+      setMemberModalId: () => {},
       showCreateMember: false,
-      setShowCreateMember: () => { },
+      setShowCreateMember: () => {},
       showAvatar: true,
-      setShowAvatar: () => { },
-      view: "list",
-      setView: () => { },
+      setShowAvatar: () => {},
+      view: "tree",
+      setView: () => {},
       rootId: null,
-      setRootId: () => { },
+      setRootId: () => {},
+      hideDaughtersInLaw: false,
+      setHideDaughtersInLaw: () => {},
+      hideSonsInLaw: false,
+      setHideSonsInLaw: () => {},
+      hideDaughters: false,
+      setHideDaughters: () => {},
+      hideSons: false,
+      setHideSons: () => {},
+      hideMales: false,
+      setHideMales: () => {},
+      hideFemales: false,
+      setHideFemales: () => {},
+      hideExpandButtons: false,
+      setHideExpandButtons: () => {},
+      autoCollapseLevel: 2,
+      setAutoCollapseLevel: () => {},
     };
   }
   return context;

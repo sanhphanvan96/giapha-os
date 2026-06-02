@@ -17,7 +17,7 @@ import LogoutButton from "./LogoutButton";
 import { useUser } from "./UserProvider";
 
 export default function HeaderMenu() {
-  const { user, isAdmin } = useUser();
+  const { user, profile, isAdmin } = useUser();
   const userEmail = user?.email;
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -39,8 +39,14 @@ export default function HeaderMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full hover:bg-stone-100 transition-all duration-200 border border-transparent hover:border-stone-200"
       >
-        <div className="size-8 rounded-full bg-linear-to-br from-amber-200 to-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-sm ring-1 ring-amber-300/50">
-          {userEmail ? (
+        <div className="size-8 rounded-full overflow-hidden bg-linear-to-br from-amber-200 to-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-sm ring-1 ring-amber-300/50">
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={userEmail ?? ""}
+              className="w-full h-full object-cover"
+            />
+          ) : userEmail ? (
             userEmail.charAt(0).toUpperCase()
           ) : (
             <UserCircle className="size-5" />

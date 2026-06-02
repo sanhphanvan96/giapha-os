@@ -11,7 +11,7 @@
 
   /* Typography */
   --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  --font-serif: var(--font-inter);
 
   --color-primary: #1c1917;
   --color-secondary: #57534e;
