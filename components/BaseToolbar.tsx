@@ -48,7 +48,7 @@ export default function BaseToolbar({
   canEdit,
   children,
 }: BaseToolbarProps) {
-  const { showAvatar, setShowAvatar } = useMemberListView();
+  const { showAvatar, setShowAvatar, showNameOnly, setShowNameOnly } = useMemberListView();
   const [showFilters, setShowFilters] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -123,6 +123,15 @@ export default function BaseToolbar({
                 />
                 Tối giản
               </label>
+              <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer hover:text-stone-900 transition-colors select-none">
+                <input
+                  type="checkbox"
+                  checked={showNameOnly}
+                  onChange={(e) => setShowNameOnly(e.target.checked)}
+                  className="rounded text-amber-600 focus:ring-amber-500 cursor-pointer size-4"
+                />
+                Chỉ hiện tên
+              </label>
               {setHideExpandButtons && (
                 <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer hover:text-stone-900 transition-colors select-none">
                   <input
@@ -135,20 +144,34 @@ export default function BaseToolbar({
                 </label>
               )}
               {setAutoCollapseLevel && (
-                <label className="flex items-center justify-between gap-2 text-sm text-stone-600 cursor-pointer hover:text-stone-900 transition-colors select-none">
+                <div className="flex items-center justify-between gap-2 text-sm text-stone-600 select-none">
                   <span>Số thế hệ</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={99}
-                    value={autoCollapseLevel ?? 0}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      setAutoCollapseLevel(isNaN(val) ? 0 : val);
-                    }}
-                    className="w-14 px-2 py-1 text-center text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-400"
-                  />
-                </label>
+                  <div className="flex items-center gap-1.5">
+                    {(autoCollapseLevel ?? 0) > 0 && (
+                      <input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={autoCollapseLevel ?? 0}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setAutoCollapseLevel(isNaN(val) || val < 1 ? 1 : val);
+                        }}
+                        className="w-12 px-2 py-1 text-center text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-400"
+                      />
+                    )}
+                    <button
+                      onClick={() => setAutoCollapseLevel((autoCollapseLevel ?? 0) > 0 ? 0 : 2)}
+                      className={`px-2 py-1 text-xs rounded-lg border transition-colors ${
+                        (autoCollapseLevel ?? 0) === 0
+                          ? "bg-amber-100 text-amber-700 border-amber-300"
+                          : "bg-white text-stone-500 border-stone-200 hover:border-stone-300"
+                      }`}
+                    >
+                      Tất cả
+                    </button>
+                  </div>
+                </div>
               )}
 
               <div className="h-px w-full bg-stone-100 my-1 font-bold text-stone-400 uppercase tracking-wider flex items-center gap-2"></div>
