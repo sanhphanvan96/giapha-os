@@ -58,8 +58,13 @@ export async function parseCsvZip(zipBlob: Blob): Promise<{
   const zip = new JSZip();
   const loadedZip = await zip.loadAsync(zipBlob);
 
-  const personsFile = loadedZip.file("persons.csv");
-  const relationshipsFile = loadedZip.file("relationships.csv");
+  const findFile = (name: string) =>
+    loadedZip.file(name) ??
+    loadedZip.file(new RegExp(`(^|/)${name}$`))[0] ??
+    null;
+
+  const personsFile = findFile("persons.csv");
+  const relationshipsFile = findFile("relationships.csv");
 
   if (!personsFile || !relationshipsFile) {
     throw new Error(
@@ -111,7 +116,7 @@ export async function parseCsvZip(zipBlob: Blob): Promise<{
   };
 
   // Parse person_details_private.csv (optional, backward compat)
-  const privateFile = loadedZip.file("person_details_private.csv");
+  const privateFile = findFile("person_details_private.csv");
   if (privateFile) {
     const raw = await privateFile.async("text");
     const privateCsvStr = raw.startsWith(UTF8_BOM) ? raw.slice(1) : raw;
@@ -130,7 +135,7 @@ export async function parseCsvZip(zipBlob: Blob): Promise<{
   }
 
   // Parse custom_events.csv (optional, backward compat)
-  const eventsFile = loadedZip.file("custom_events.csv");
+  const eventsFile = findFile("custom_events.csv");
   if (eventsFile) {
     const raw = await eventsFile.async("text");
     const eventsCsvStr = raw.startsWith(UTF8_BOM) ? raw.slice(1) : raw;

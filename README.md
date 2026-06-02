@@ -92,7 +92,7 @@ Bạn sẽ có một đường link website để sử dụng ngay.
 
 ---
 
-## Cách 2: Chạy trên máy cá nhân
+## Cách 2: Chạy trên máy cá nhân (kết nối Supabase Cloud)
 
 Yêu cầu: máy đã cài [Node.js](https://nodejs.org/en) và [Bun](https://bun.sh/)
 
@@ -118,6 +118,87 @@ bun run dev
 ```
 
 Mở trình duyệt và truy cập: `http://localhost:3000`
+
+---
+
+## Cách 3: Chạy hoàn toàn local (Supabase local + Homebrew)
+
+Cách này dựng một Supabase instance riêng trên máy bạn — **dữ liệu local hoàn toàn tách biệt với production**, phù hợp để phát triển và thử nghiệm.
+
+**Yêu cầu:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) hoặc [Colima](https://github.com/abiosoft/colima), [Homebrew](https://brew.sh/), [Bun](https://bun.sh/)
+
+### 1. Cài Supabase CLI
+
+```bash
+brew install supabase/tap/supabase
+```
+
+### 2. Khởi tạo Supabase local
+
+```bash
+# Fix permission nếu cần (lần đầu chạy)
+sudo chown -R $(whoami) supabase/
+
+# Khởi tạo config
+supabase init
+```
+
+Sau khi init xong, mở `supabase/config.toml` và tắt analytics (tránh lỗi Docker socket trên Mac):
+
+```toml
+[analytics]
+enabled = false
+```
+
+### 3. Khởi động Supabase local
+
+```bash
+supabase start
+```
+
+Lần đầu sẽ tải Docker images (~2GB), các lần sau khởi động nhanh hơn. Khi xong, terminal sẽ hiển thị:
+
+```
+API URL: http://127.0.0.1:54321
+anon key: eyJ...
+Studio URL: http://127.0.0.1:54323
+```
+
+### 4. Apply schema database
+
+```bash
+supabase db reset
+```
+
+Lệnh này sẽ chạy toàn bộ file migration trong `supabase/migrations/` (hoặc bạn có thể copy nội dung `docs/schema.sql` thủ công qua Studio).
+
+### 5. Cấu hình môi trường
+
+Tạo `.env.local` với thông tin từ output ở bước 3:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY="<anon key ở trên>"
+```
+
+### 6. Chạy dự án
+
+```bash
+bun install
+bun run dev
+```
+
+Mở trình duyệt và truy cập: `http://localhost:3000`
+
+**Studio UI** (xem/edit data trực tiếp): `http://localhost:54323`
+
+### Tắt Supabase local
+
+```bash
+supabase stop
+```
+
+> **Lưu ý:** Dữ liệu local sẽ được giữ lại sau khi `stop`. Dùng `supabase stop --no-backup` nếu muốn xoá sạch.
 
 ---
 
