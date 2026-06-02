@@ -17,8 +17,6 @@ import TreeToolbar from "./TreeToolbar";
 
 import { buildAdjacencyLists, getFilteredTreeData } from "@/utils/treeHelpers";
 
-const DEFAULT_AUTO_COLLAPSE_LEVEL = 2;
-
 export default function FamilyTree({
   personsMap,
   relationships,
@@ -31,21 +29,28 @@ export default function FamilyTree({
   canEdit?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);
-  const [hideSonsInLaw, setHideSonsInLaw] = useState(false);
-  const [hideDaughters, setHideDaughters] = useState(false);
-  const [hideSons, setHideSons] = useState(false);
-  const [hideMales, setHideMales] = useState(false);
-  const [hideFemales, setHideFemales] = useState(false);
-
   // Tập hợp các personId đang bị đóng (collapsed)
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
-  const [hideExpandButtons, setHideExpandButtons] = useState(false);
-  const [autoCollapseLevel, setAutoCollapseLevel] = useState(
-    DEFAULT_AUTO_COLLAPSE_LEVEL,
-  );
 
-  const { showAvatar } = useMemberListView();
+  const {
+    showAvatar,
+    hideDaughtersInLaw,
+    setHideDaughtersInLaw,
+    hideSonsInLaw,
+    setHideSonsInLaw,
+    hideDaughters,
+    setHideDaughters,
+    hideSons,
+    setHideSons,
+    hideMales,
+    setHideMales,
+    hideFemales,
+    setHideFemales,
+    hideExpandButtons,
+    setHideExpandButtons,
+    autoCollapseLevel,
+    setAutoCollapseLevel,
+  } = useMemberListView();
 
   const {
     scale,

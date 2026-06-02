@@ -58,7 +58,7 @@ export default function FamilyNodeCard({
         </div>
       )}
 
-      {/* 2. Gender Icon + Name */}
+      {/* 2. Name */}
       <div className="flex flex-col items-center justify-center gap-1 w-full px-0.5 sm:px-1 relative z-10">
         <div
           className={`
