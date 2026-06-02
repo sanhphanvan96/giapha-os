@@ -252,13 +252,12 @@ export default function MemberList({
     // we'd sort by generation here. But since UI groups by generation, we just return `finalSorted`.
     // Let's ensure generation is the primary sort key just in case.
     finalSorted.sort((a, b) => {
-      const genA = a.generation || 999;
-      const genB = b.generation || 999;
-      if (genA !== genB) {
-        return sortOption === "generation_desc" ? genB - genA : genA - genB;
-      }
-      // If same generation, preserve the family sorting we just did
-      return 0;
+      const genA = a.generation;
+      const genB = b.generation;
+      if (genA === genB) return 0;
+      if (genA == null) return 1;
+      if (genB == null) return -1;
+      return sortOption === "generation_desc" ? genB - genA : genA - genB;
     });
 
     return finalSorted;
@@ -366,19 +365,20 @@ export default function MemberList({
             {Object.entries(
               sortedPersons.reduce(
                 (acc, person) => {
-                  const gen = person.generation || 0;
+                  const gen = person.generation ?? "unknown";
                   if (!acc[gen]) acc[gen] = [];
                   acc[gen].push(person);
                   return acc;
                 },
-                {} as Record<number, Person[]>,
+                {} as Record<number | string, Person[]>,
               ),
             )
               .sort(([genA], [genB]) => {
-                if (sortOption === "generation_desc") {
-                  return Number(genB) - Number(genA);
-                }
-                return Number(genA) - Number(genB);
+                if (genA === "unknown") return 1;
+                if (genB === "unknown") return -1;
+                return sortOption === "generation_desc"
+                  ? Number(genB) - Number(genA)
+                  : Number(genA) - Number(genB);
               })
               .map(([gen, persons]) => {
                 const familiesMap = new Map<string, typeof persons>();
@@ -395,7 +395,7 @@ export default function MemberList({
                     <div className="flex items-center gap-3">
                       <div className="h-px flex-1 bg-stone-200"></div>
                       <h3 className="text-lg font-serif font-bold text-amber-800 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-200/50 shadow-sm">
-                        {gen === "0" ? "Chưa xác định đời" : `Đời thứ ${gen}`}
+                        {gen === "unknown" ? "Chưa xác định đời" : `Đời thứ ${gen}`}
                       </h3>
                       <div className="h-px flex-1 bg-stone-200"></div>
                     </div>
