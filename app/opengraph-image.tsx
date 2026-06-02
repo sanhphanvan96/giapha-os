@@ -7,9 +7,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  // Load Dancing Script for handwriting feel with Vietnamese support
   const css = await fetch(
-    "https://fonts.googleapis.com/css2?family=Yeseva+One&display=swap"
+    "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700;800&display=swap"
   ).then((r) => r.text());
   const fontUrl = css.match(/url\((.+?)\)/)?.[1];
   const fontData = fontUrl
@@ -24,62 +23,56 @@ export default async function Image() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 50px",
-          position: "relative",
-          overflow: "hidden",
+          padding: "28px",
         }}
       >
-        {/* Background decorative circles */}
-        <div style={{ position: "absolute", left: "-160px", top: "-160px", width: "600px", height: "600px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex" }} />
-        <div style={{ position: "absolute", right: "-100px", bottom: "-120px", width: "480px", height: "480px", borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex" }} />
-        <div style={{ position: "absolute", right: "200px", top: "40px", width: "140px", height: "140px", borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex" }} />
-
-        {/* Frosted glass card */}
+        {/* White card */}
         <div
           style={{
+            background: "#ffffff",
+            borderRadius: "24px",
+            width: "100%",
+            height: "100%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "rgba(255,255,255,0.18)",
-            border: "1.5px solid rgba(255,255,255,0.35)",
-            borderRadius: "32px",
-            padding: "48px 72px",
-            width: "100%",
-            height: "100%",
+            padding: "56px 80px",
             gap: "0px",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
+          {/* Subtle decorative circle top-right */}
+          <div style={{ position: "absolute", right: "-80px", top: "-80px", width: "320px", height: "320px", borderRadius: "50%", background: "rgba(249,115,22,0.07)", display: "flex" }} />
+          <div style={{ position: "absolute", left: "-60px", bottom: "-60px", width: "240px", height: "240px", borderRadius: "50%", background: "rgba(245,158,11,0.06)", display: "flex" }} />
+
           {/* Badge */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              background: "rgba(255,255,255,0.3)",
+              background: "linear-gradient(135deg, #fef3c7, #fed7aa)",
               borderRadius: "100px",
               padding: "8px 22px",
-              marginBottom: "32px",
+              marginBottom: "28px",
             }}
           >
-            <span style={{ color: "#fff", fontSize: "18px", fontWeight: 600, letterSpacing: "0.5px" }}>
+            <span style={{ color: "#c2410c", fontSize: "18px", fontWeight: 700, fontFamily: fontData ? "Be Vietnam Pro" : "sans-serif" }}>
               Website Gia Phả Online
             </span>
           </div>
 
-          {/* Title — handwriting font */}
+          {/* Title */}
           <div
             style={{
-              color: "#ffffff",
+              color: "#1c1917",
               fontSize: "72px",
-              fontWeight: 700,
-              lineHeight: 1.15,
+              fontWeight: 800,
+              lineHeight: 1.1,
               textAlign: "center",
-              fontFamily: fontData ? "Yeseva One" : "serif",
-              marginBottom: "20px",
-              textShadow: "0 2px 16px rgba(0,0,0,0.15)",
+              fontFamily: fontData ? "Be Vietnam Pro" : "sans-serif",
+              marginBottom: "16px",
               whiteSpace: "nowrap",
             }}
           >
@@ -87,26 +80,26 @@ export default async function Image() {
           </div>
 
           {/* Divider */}
-          <div style={{ width: "60px", height: "3px", background: "rgba(255,255,255,0.6)", borderRadius: "4px", marginBottom: "20px", display: "flex" }} />
+          <div style={{ width: "48px", height: "4px", background: "linear-gradient(90deg, #f59e0b, #ef4444)", borderRadius: "4px", marginBottom: "20px", display: "flex" }} />
 
           {/* Description */}
           <div
             style={{
-              fontFamily: "sans-serif",
-            color: "rgba(255,255,255,0.9)",
+              color: "#57534e",
               fontSize: "26px",
               fontWeight: 400,
               lineHeight: 1.6,
               textAlign: "center",
-              maxWidth: "620px",
+              maxWidth: "640px",
+              fontFamily: fontData ? "Be Vietnam Pro" : "sans-serif",
             }}
           >
             Lưu giữ, kết nối và truyền lại di sản dòng tộc qua nhiều thế hệ
           </div>
 
           {/* URL */}
-          <div style={{ marginTop: "32px", display: "flex" }}>
-            <span style={{ color: "rgba(255,255,255,0.65)", fontSize: "20px", fontFamily: "sans-serif" }}>
+          <div style={{ marginTop: "28px", display: "flex" }}>
+            <span style={{ color: "#a8a29e", fontSize: "20px", fontFamily: "sans-serif" }}>
               https://giaphaphangia.vercel.app
             </span>
           </div>
@@ -116,7 +109,7 @@ export default async function Image() {
     {
       ...size,
       ...(fontData
-        ? { fonts: [{ name: "Yeseva One", data: fontData, weight: 400, style: "normal" }] }
+        ? { fonts: [{ name: "Be Vietnam Pro", data: fontData, weight: 800, style: "normal" }] }
         : {}),
     }
   );
