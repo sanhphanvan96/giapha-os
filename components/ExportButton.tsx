@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   Download,
+  FileCode,
   FileImage,
   FileText,
   Loader2,
@@ -27,7 +28,7 @@ export default function ExportButton() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleExport = async (format: "png" | "pdf") => {
+  const handleExport = async (format: "png" | "pdf" | "svg") => {
     try {
       setIsExporting(true);
       setShowMenu(false);
@@ -85,6 +86,15 @@ export default function ExportButton() {
         });
         pdf.addImage(imgData, "JPEG", 0, 0, width, height);
         pdf.save(`giapha-sodo-${new Date().toISOString().split("T")[0]}.pdf`);
+      } else if (format === "svg") {
+        const { toSvg } = await import("html-to-image");
+        const url = await toSvg(element, exportOptions);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `giapha-sodo-${new Date().toISOString().split("T")[0]}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     } catch (err) {
       console.error("Export error:", err);
@@ -142,6 +152,13 @@ export default function ExportButton() {
             >
               <FileText className="size-4" />
               Lưu thành PDF
+            </button>
+            <button
+              onClick={() => handleExport("svg")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors text-left"
+            >
+              <FileCode className="size-4" />
+              Lưu thành SVG
             </button>
           </motion.div>
         )}
