@@ -20,7 +20,7 @@ export default function FamilyNodeCard({
   onClickCard,
   onClickName,
 }: FamilyNodeCardProps) {
-  const { showAvatar, setMemberModalId } = useMemberListView();
+  const { showAvatar, showNameOnly, setMemberModalId } = useMemberListView();
 
   const isDeceased = person.is_deceased;
 
@@ -76,6 +76,9 @@ export default function FamilyNodeCard({
         >
           {(() => {
             const parts = person.full_name.trim().split(" ");
+            if (showNameOnly) {
+              return parts[parts.length - 1];
+            }
             if (showAvatar && parts.length >= 3) {
               const mid = Math.ceil(parts.length / 2);
               const line1 = parts.slice(0, mid).join(" ");

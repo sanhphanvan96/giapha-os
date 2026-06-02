@@ -34,6 +34,7 @@ export default function FamilyTree({
 
   const {
     showAvatar,
+    showNameOnly,
     hideDaughtersInLaw,
     setHideDaughtersInLaw,
     hideSonsInLaw,

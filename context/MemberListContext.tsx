@@ -11,6 +11,8 @@ interface MemberListViewState {
   setShowCreateMember: (show: boolean) => void;
   showAvatar: boolean;
   setShowAvatar: (show: boolean) => void;
+  showNameOnly: boolean;
+  setShowNameOnly: (val: boolean) => void;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   rootId: string | null;
@@ -59,6 +61,7 @@ export function MemberListProvider({
   const [showAvatar, setShowAvatar] = useState<boolean>(
     () => initialShowAvatar ?? searchParams.get("avatar") !== "hide",
   );
+  const [showNameOnly, setShowNameOnly] = useState(false);
   const [view, setViewState] = useState<ViewMode>(
     () => initialView ?? (searchParams.get("view") as ViewMode | null) ?? "tree",
   );
@@ -157,6 +160,8 @@ export function MemberListProvider({
         setShowCreateMember,
         showAvatar,
         setShowAvatar: updateAvatar,
+        showNameOnly,
+        setShowNameOnly,
         view,
         setView,
         rootId,
@@ -196,6 +201,8 @@ export function useMemberListView(): MemberListViewState {
       setShowCreateMember: () => {},
       showAvatar: true,
       setShowAvatar: () => {},
+      showNameOnly: false,
+      setShowNameOnly: () => {},
       view: "tree",
       setView: () => {},
       rootId: null,
