@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import config from "./config";
 import "./globals.css";
 
-const inter = Inter({
+const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-inter",
-});
-const playfair = Playfair_Display({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-playfair",
 });
 export const metadata: Metadata = {
   title: config.siteName,
@@ -24,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body
-        className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
+        className={`${beVietnamPro.variable} font-sans antialiased relative`}
       >
         {children}
       </body>
