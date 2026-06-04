@@ -27,6 +27,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     supabase
       .from("persons")
       .select("*")
+      .order("generation", { ascending: true, nullsFirst: false })
       .order("birth_year", { ascending: true, nullsFirst: false }),
     supabase.from("relationships").select("*"),
   ]);
