@@ -142,7 +142,6 @@ export const MindmapNode = memo(
                         >
                           {data.person.avatar_url ? (
                             <Image
-                              unoptimized
                               src={data.person.avatar_url}
                               alt={data.person.full_name}
                               width={40}
@@ -232,7 +231,6 @@ export const MindmapNode = memo(
                               >
                                 {spouseData.person.avatar_url ? (
                                   <Image
-                                    unoptimized
                                     src={spouseData.person.avatar_url}
                                     alt={spouseData.person.full_name}
                                     width={32}

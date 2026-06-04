@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import config from "./config";
 import "./globals.css";
 
@@ -44,6 +46,8 @@ export default function RootLayout({
         className={`${beVietnamPro.variable} font-sans antialiased relative`}
       >
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

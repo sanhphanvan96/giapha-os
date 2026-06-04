@@ -94,7 +94,6 @@ export default function PersonSelector({
             {currentPerson ? (
               currentPerson.avatar_url ? (
                 <Image
-                  unoptimized
                   src={currentPerson.avatar_url}
                   alt={currentPerson.full_name}
                   width={32}
@@ -221,7 +220,6 @@ export default function PersonSelector({
                           >
                             {person.avatar_url ? (
                               <Image
-                                unoptimized
                                 src={person.avatar_url}
                                 alt={person.full_name}
                                 width={32}

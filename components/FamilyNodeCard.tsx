@@ -44,7 +44,6 @@ export default function FamilyNodeCard({
           >
             {person.avatar_url ? (
               <Image
-                unoptimized
                 src={person.avatar_url}
                 alt={person.full_name}
                 className="w-full h-full object-cover"

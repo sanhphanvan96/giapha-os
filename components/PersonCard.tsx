@@ -41,7 +41,6 @@ export default function PersonCard({ person }: PersonCardProps) {
           >
             {person.avatar_url ? (
               <Image
-                unoptimized
                 src={person.avatar_url}
                 alt={person.full_name}
                 width={32}

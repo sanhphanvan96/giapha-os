@@ -669,7 +669,6 @@ export default function RelationshipManager({
                       >
                         {rel.targetPerson.avatar_url ? (
                           <Image
-                            unoptimized
                             src={rel.targetPerson.avatar_url}
                             alt={rel.targetPerson.full_name}
                             className="h-full w-full object-cover"
