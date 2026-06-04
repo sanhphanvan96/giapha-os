@@ -1,6 +1,7 @@
 import LineageManager from "@/components/LineageManager";
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
 import { redirect } from "next/navigation";
+import { Person } from "@/types";
 
 export default async function LineagePage() {
   const profile = await getProfile();
@@ -13,13 +14,15 @@ export default async function LineagePage() {
 
   const { data: personsData } = await supabase
     .from("persons")
-    .select("*")
+    .select(
+      "id, full_name, gender, birth_year, generation, birth_order, is_in_law",
+    )
     .order("birth_year", { ascending: true, nullsFirst: false });
 
   const { data: relsData } = await supabase.from("relationships").select("*");
 
   // Identify "roots" - people with no parents
-  const persons = personsData || [];
+  const persons = (personsData || []) as Person[];
   const relationships = relsData || [];
 
   return (

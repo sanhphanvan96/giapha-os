@@ -61,7 +61,7 @@ export default function MemberDetailModal() {
             .from("person_details_private")
             .select("*")
             .eq("person_id", id)
-            .single();
+            .maybeSingle();
           setPrivateData(privData || {});
         } else {
           setPrivateData(null);

@@ -132,6 +132,8 @@ export default function MemberDetailContent({
                 width={128}
                 height={128}
                 className="h-full w-full object-cover"
+                loading="eager"
+                priority
               />
             ) : (
               <DefaultAvatar gender={person.gender} size={128} />

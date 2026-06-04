@@ -17,6 +17,9 @@ import TreeToolbar from "./TreeToolbar";
 
 import { buildAdjacencyLists, getFilteredTreeData } from "@/utils/treeHelpers";
 
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
 export default function FamilyTree({
   personsMap,
   relationships,
@@ -85,7 +88,7 @@ export default function FamilyTree({
     }
   }, []);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const equalizeHeights = () => {
       if (!containerRef.current) return;
       const nodes = containerRef.current.querySelectorAll(".node-container");
@@ -125,11 +128,10 @@ export default function FamilyTree({
       });
     };
 
-    const timeoutId = setTimeout(equalizeHeights, 50);
+    equalizeHeights();
     window.addEventListener("resize", equalizeHeights);
 
     return () => {
-      clearTimeout(timeoutId);
       window.removeEventListener("resize", equalizeHeights);
     };
   }, [

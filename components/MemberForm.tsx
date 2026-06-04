@@ -365,7 +365,9 @@ export default function MemberForm({
           data: { publicUrl },
         } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-        currentAvatarUrl = publicUrl;
+        // Add cache-busting param so browser/Next.js Image shows the new file
+        // even if the URL (filename) is the same as before (upsert case)
+        currentAvatarUrl = `${publicUrl}?t=${Date.now()}`;
 
         // Update the person with the final avatar URL
         const { error: updateAvatarError } = await supabase

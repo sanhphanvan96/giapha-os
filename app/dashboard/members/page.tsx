@@ -3,6 +3,7 @@ import MembersViews from "@/components/MembersViews";
 import MemberDetailModal from "@/components/modal/MemberDetailModal";
 import ViewToggle from "@/components/ViewToggle";
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
+import { Person } from "@/types";
 
 import { ViewMode } from "@/components/ViewToggle";
 
@@ -26,12 +27,15 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   const [personsRes, relsRes] = await Promise.all([
     supabase
       .from("persons")
-      .select("*")
+      .select(
+        "id, full_name, other_names, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, is_in_law, birth_order, generation, avatar_url, updated_at",
+      )
+      .order("generation", { ascending: true, nullsFirst: false })
       .order("birth_year", { ascending: true, nullsFirst: false }),
     supabase.from("relationships").select("*"),
   ]);
 
-  const persons = personsRes.data || [];
+  const persons = (personsRes.data || []) as Person[];
   const relationships = relsRes.data || [];
 
   // Prepare map and roots for tree views

@@ -1,5 +1,6 @@
 import FamilyStats from "@/components/FamilyStats";
 import { getSupabase } from "@/utils/supabase/queries";
+import { Person } from "@/types";
 
 export const metadata = {
   title: "Thống kê gia phả",
@@ -8,7 +9,12 @@ export const metadata = {
 export default async function StatsPage() {
   const supabase = await getSupabase();
 
-  const { data: persons } = await supabase.from("persons").select("*");
+  const { data: personsData } = await supabase
+    .from("persons")
+    .select(
+      "id, gender, birth_year, birth_month, birth_day, death_year, is_deceased, is_in_law, generation, birth_order",
+    );
+  const persons = (personsData || []) as Person[];
   const { data: relationships } = await supabase
     .from("relationships")
     .select("*");
