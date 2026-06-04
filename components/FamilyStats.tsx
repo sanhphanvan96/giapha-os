@@ -166,9 +166,9 @@ export default function FamilyStats({
 
       // Chinese Zodiac
       const chineseZodiac = getZodiacAnimal(
-        p.birth_year,
-        p.birth_month,
-        p.birth_day,
+        p.birth_lunar_year || p.birth_year,
+        p.birth_lunar_year ? null : p.birth_month,
+        p.birth_lunar_year ? null : p.birth_day,
       );
       if (chineseZodiac) {
         chineseZodiacMap.set(

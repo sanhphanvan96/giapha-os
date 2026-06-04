@@ -87,6 +87,21 @@ export default async function LineagePage() {
           </div>
         </div>
 
+        {/* Warning */}
+        <div className="mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
+          <span className="text-red-500 mt-0.5 shrink-0">⚠️</span>
+          <div>
+            <p className="text-sm font-bold text-red-700 mb-1">
+              Lưu ý quan trọng trước khi áp dụng
+            </p>
+            <p className="text-xs text-red-600 leading-relaxed">
+              Thao tác này sẽ <strong>ghi đè</strong> dữ liệu thế hệ, thứ tự sinh và trạng thái Dâu/Rể của{" "}
+              <strong>tất cả thành viên</strong>. Hãy kiểm tra kỹ phần preview và đảm bảo dữ liệu quan hệ
+              (bố/mẹ, vợ/chồng) đã chính xác trước khi xác nhận.
+            </p>
+          </div>
+        </div>
+
         {/* Manager */}
         <div className="bg-white/80 rounded-2xl border border-stone-200/60 shadow-sm p-5 sm:p-8">
           <LineageManager persons={persons} relationships={relationships} />

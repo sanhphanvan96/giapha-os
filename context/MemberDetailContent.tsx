@@ -222,18 +222,18 @@ export default function MemberDetailContent({
                     </h3>
                   </div>
                   <div className="flex items-center gap-1">
-                    {person.birth_year &&
+                    {(person.birth_lunar_year || person.birth_year) &&
                       getZodiacAnimal(
-                        person.birth_year,
-                        person.birth_month,
-                        person.birth_day,
+                        person.birth_lunar_year || person.birth_year,
+                        person.birth_lunar_year ? null : person.birth_month,
+                        person.birth_lunar_year ? null : person.birth_day,
                       ) && (
                         <span className="text-[10px] font-sans font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
                           Tuổi{" "}
                           {getZodiacAnimal(
-                            person.birth_year,
-                            person.birth_month,
-                            person.birth_day,
+                            person.birth_lunar_year || person.birth_year,
+                            person.birth_lunar_year ? null : person.birth_month,
+                            person.birth_lunar_year ? null : person.birth_day,
                           )}
                         </span>
                       )}
@@ -254,18 +254,41 @@ export default function MemberDetailContent({
                       person.birth_day,
                     )}
                   </p>
-                  {(person.birth_year ||
+                  {(person.birth_lunar_year ||
+                    person.birth_lunar_month ||
+                    person.birth_lunar_day ||
+                    person.birth_year ||
                     person.birth_month ||
                     person.birth_day) && (
                       <p className="text-sm font-medium text-stone-500 flex items-center gap-1.5">
                         <span className="text-[10px] border border-stone-200/60 bg-stone-50/80 rounded px-1.5 py-0.5">
                           Âm lịch
                         </span>
-                        {getLunarDateString(
-                          person.birth_year,
-                          person.birth_month,
-                          person.birth_day,
-                        ) || "Chưa rõ"}
+                        {person.birth_lunar_day || person.birth_lunar_month || person.birth_lunar_year
+                          ? formatDisplayDate(
+                              person.birth_lunar_year,
+                              person.birth_lunar_month,
+                              person.birth_lunar_day,
+                            )
+                          : getLunarDateString(
+                              person.birth_year,
+                              person.birth_month,
+                              person.birth_day,
+                            ) || "Chưa rõ"}
+                      </p>
+                    )}
+                  {(person.legal_birth_year ||
+                    person.legal_birth_month ||
+                    person.legal_birth_day) && (
+                      <p className="text-xs font-medium text-stone-400 flex items-center gap-1.5 pt-1.5 border-t border-stone-100">
+                        <span className="text-[10px] border border-stone-200/60 bg-stone-50/80 rounded px-1 py-0.5">
+                          Giấy tờ
+                        </span>
+                        {formatDisplayDate(
+                          person.legal_birth_year,
+                          person.legal_birth_month,
+                          person.legal_birth_day,
+                        )}
                       </p>
                     )}
                 </div>

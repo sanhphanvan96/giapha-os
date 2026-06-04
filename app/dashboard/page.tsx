@@ -13,7 +13,6 @@ import {
   Star,
   Users,
   Image as ImageIcon,
-  Info,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -48,7 +47,7 @@ export default async function DashboardLaunchpad() {
     supabase
       .from("persons")
       .select(
-        "id, full_name, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased",
+        "id, full_name, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type",
       ),
     supabase
       .from("custom_events")
@@ -108,15 +107,6 @@ export default async function DashboardLaunchpad() {
       bgColor: "bg-pink-50",
       borderColor: "border-pink-200/60",
       hoverColor: "hover:border-pink-400 hover:shadow-pink-100",
-    },
-    {
-      title: "Giới thiệu & Liên hệ",
-      description: "Thông tin về ứng dụng và đội ngũ phát triển",
-      icon: <Info className="size-8 text-stone-600" />,
-      href: "/about",
-      bgColor: "bg-stone-50",
-      borderColor: "border-stone-200/60",
-      hoverColor: "hover:border-stone-400 hover:shadow-stone-100",
     },
   ];
 

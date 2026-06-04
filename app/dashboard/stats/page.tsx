@@ -12,7 +12,7 @@ export default async function StatsPage() {
   const { data: personsData } = await supabase
     .from("persons")
     .select(
-      "id, gender, birth_year, birth_month, birth_day, death_year, is_deceased, is_in_law, generation, birth_order",
+      "id, gender, birth_year, birth_month, birth_day, death_year, is_deceased, is_in_law, generation, birth_order, birth_lunar_year, birth_lunar_month, birth_lunar_day",
     );
   const persons = (personsData || []) as Person[];
   const { data: relationships } = await supabase

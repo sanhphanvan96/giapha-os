@@ -89,6 +89,13 @@ export function computeEvents(
     death_lunar_month: number | null;
     death_lunar_day: number | null;
     is_deceased: boolean;
+    birth_lunar_year?: number | null;
+    birth_lunar_month?: number | null;
+    birth_lunar_day?: number | null;
+    legal_birth_year?: number | null;
+    legal_birth_month?: number | null;
+    legal_birth_day?: number | null;
+    birthday_remind_type?: string | null;
   }[],
   customEvents: CustomEventRecord[] = []
 ): FamilyEvent[] {
@@ -97,45 +104,125 @@ export function computeEvents(
   const events: FamilyEvent[] = [];
 
   for (const p of persons) {
-    // ── Birthday (solar) ────────────────────────────────────────────
-    if (p.birth_month && p.birth_day) {
-      const thisYear = today.getFullYear();
-      const thisYearDate = new Date(thisYear, p.birth_month - 1, p.birth_day);
-      const isUpcoming = thisYearDate >= today;
+    // Determine birthday date parameters based on birthday_remind_type
+    let bDay: number | null = null;
+    let bMonth: number | null = null;
+    let bYear: number | null = null;
+    let isLunar = false;
 
-      // Next occurrence (upcoming)
-      const next = isUpcoming
-        ? thisYearDate
-        : new Date(thisYear + 1, p.birth_month - 1, p.birth_day);
+    const remindType = p.birthday_remind_type || "actual_solar";
 
-      const daysUntil = Math.round(
-        (next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
+    if (remindType === "actual_lunar" && p.birth_lunar_day && p.birth_lunar_month) {
+      bDay = p.birth_lunar_day;
+      bMonth = p.birth_lunar_month;
+      bYear = p.birth_lunar_year ?? null;
+      isLunar = true;
+    } else if (remindType === "legal_solar" && p.legal_birth_day && p.legal_birth_month) {
+      bDay = p.legal_birth_day;
+      bMonth = p.legal_birth_month;
+      bYear = p.legal_birth_year ?? null;
+      isLunar = false;
+    } else if (p.birth_day && p.birth_month) {
+      bDay = p.birth_day;
+      bMonth = p.birth_month;
+      bYear = p.birth_year ?? null;
+      isLunar = false;
+    }
 
-      const baseEvent: FamilyEvent = {
-        personId: p.id,
-        personName: p.full_name,
-        type: "birthday",
-        nextOccurrence: next,
-        daysUntil,
-        eventDateLabel: `${p.birth_day.toString().padStart(2, "0")}/${p.birth_month.toString().padStart(2, "0")}`,
-        originYear: p.birth_year || null,
-        originMonth: p.birth_month,
-        originDay: p.birth_day,
-        isDeceased: p.is_deceased,
-      };
-      events.push(baseEvent);
+    // ── Birthday ────────────────────────────────────────────
+    if (bDay && bMonth) {
+      if (isLunar) {
+        // Lunar birthday reminder logic
+        const next = nextSolarForLunar(bMonth, bDay, today);
+        if (next) {
+          const daysUntil = Math.round(
+            (next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
-      // Past occurrence (already happened this year)
-      if (!isUpcoming) {
-        const pastDaysUntil = Math.round(
-          (thisYearDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+          const baseEvent: FamilyEvent = {
+            personId: p.id,
+            personName: p.full_name,
+            type: "birthday",
+            nextOccurrence: next,
+            daysUntil,
+            eventDateLabel: `${bDay.toString().padStart(2, "0")}/${bMonth.toString().padStart(2, "0")} ÂL`,
+            originYear: bYear || null,
+            originMonth: bMonth,
+            originDay: bDay,
+            isDeceased: p.is_deceased,
+          };
+          events.push(baseEvent);
+
+          // Past occurrence: find this year's lunar date converted to solar
+          // If daysUntil > 0, the event already passed for the previous lunar year cycle
+          if (daysUntil > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const LunarClass = Lunar as any;
+            const todaySolar = Solar.fromYmd(
+              today.getFullYear(),
+              today.getMonth() + 1,
+              today.getDate(),
+            );
+            const currentLunarYear = todaySolar.getLunar().getYear();
+            try {
+              const pastLunar = LunarClass.fromYmd(currentLunarYear, bMonth, bDay);
+              const pastSolar = pastLunar.getSolar();
+              const pastDate = new Date(pastSolar.getYear(), pastSolar.getMonth() - 1, pastSolar.getDay());
+              if (pastDate < today) {
+                const pastDaysUntil = Math.round(
+                  (pastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+                );
+                events.push({
+                  ...baseEvent,
+                  nextOccurrence: pastDate,
+                  daysUntil: pastDaysUntil,
+                });
+              }
+            } catch {
+              // Skip if past lunar date doesn't exist
+            }
+          }
+        }
+      } else {
+        // Solar birthday reminder logic
+        const thisYear = today.getFullYear();
+        const thisYearDate = new Date(thisYear, bMonth - 1, bDay);
+        const isUpcoming = thisYearDate >= today;
+
+        // Next occurrence (upcoming)
+        const next = isUpcoming
+          ? thisYearDate
+          : new Date(thisYear + 1, bMonth - 1, bDay);
+
+        const daysUntil = Math.round(
+          (next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
         );
-        events.push({
-          ...baseEvent,
-          nextOccurrence: thisYearDate,
-          daysUntil: pastDaysUntil,
-        });
+
+        const baseEvent: FamilyEvent = {
+          personId: p.id,
+          personName: p.full_name,
+          type: "birthday",
+          nextOccurrence: next,
+          daysUntil,
+          eventDateLabel: `${bDay.toString().padStart(2, "0")}/${bMonth.toString().padStart(2, "0")}`,
+          originYear: bYear || null,
+          originMonth: bMonth,
+          originDay: bDay,
+          isDeceased: p.is_deceased,
+        };
+        events.push(baseEvent);
+
+        // Past occurrence (already happened this year)
+        if (!isUpcoming) {
+          const pastDaysUntil = Math.round(
+            (thisYearDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+          );
+          events.push({
+            ...baseEvent,
+            nextOccurrence: thisYearDate,
+            daysUntil: pastDaysUntil,
+          });
+        }
       }
     }
 
