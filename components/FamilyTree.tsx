@@ -10,7 +10,7 @@ import React, {
 
 import { usePanZoom } from "@/hooks/usePanZoom";
 import { Person, Relationship } from "@/types";
-import { Minus, Plus } from "lucide-react";
+import { Heart, Minus, Plus } from "lucide-react";
 import { useMemberListView } from "@/context/MemberListContext";
 import FamilyNodeCard from "./FamilyNodeCard";
 import TreeToolbar from "./TreeToolbar";
@@ -247,7 +247,13 @@ export default function FamilyTree({
                   <div
                     className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-medium text-stone-500 shrink-0${showAvatar ? " shadow-sm bg-white" : ""}`}
                   >
-                    <span className="leading-none">{idx === 0 ? "💍" : "+"}</span>
+                    <span className="leading-none flex items-center justify-center">
+                      {idx === 0 ? (
+                        <Heart className="size-3 sm:size-3.5 text-red-500 fill-red-500 animate-pulse" />
+                      ) : (
+                        "+"
+                      )}
+                    </span>
                   </div>
                   <FamilyNodeCard
                     person={spouseData.person}
