@@ -70,6 +70,19 @@ CREATE TABLE IF NOT EXISTS public.persons (
   death_lunar_month INT,
   death_lunar_day INT,
   
+  -- Lunar birth date components
+  birth_lunar_day INT,
+  birth_lunar_month INT,
+  birth_lunar_year INT,
+  
+  -- Legal birth date components (Solar only)
+  legal_birth_day INT,
+  legal_birth_month INT,
+  legal_birth_year INT,
+  
+  -- Birthday reminder configuration
+  birthday_remind_type TEXT DEFAULT 'actual_solar' NOT NULL,
+  
   is_deceased BOOLEAN NOT NULL DEFAULT FALSE,
   is_in_law BOOLEAN NOT NULL DEFAULT FALSE,
   birth_order INT,
