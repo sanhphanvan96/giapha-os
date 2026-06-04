@@ -55,6 +55,34 @@ export default function MemberForm({
     initialData?.birth_day || "",
   );
 
+  const [birthLunarYear, setBirthLunarYear] = useState<number | "">(
+    initialData?.birth_lunar_year || "",
+  );
+  const [birthLunarMonth, setBirthLunarMonth] = useState<number | "">(
+    initialData?.birth_lunar_month || "",
+  );
+  const [birthLunarDay, setBirthLunarDay] = useState<number | "">(
+    initialData?.birth_lunar_day || "",
+  );
+
+  const [legalBirthYear, setLegalBirthYear] = useState<number | "">(
+    initialData?.legal_birth_year || "",
+  );
+  const [legalBirthMonth, setLegalBirthMonth] = useState<number | "">(
+    initialData?.legal_birth_month || "",
+  );
+  const [legalBirthDay, setLegalBirthDay] = useState<number | "">(
+    initialData?.legal_birth_day || "",
+  );
+
+  const [hasDifferentLegalBirth, setHasDifferentLegalBirth] = useState<boolean>(
+    !!initialData?.legal_birth_year || false,
+  );
+
+  const [birthdayRemindType, setBirthdayRemindType] = useState<
+    "actual_solar" | "actual_lunar" | "legal_solar"
+  >(initialData?.birthday_remind_type || "actual_solar");
+
   const [deathYear, setDeathYear] = useState<number | "">(
     initialData?.death_year || "",
   );
@@ -118,6 +146,72 @@ export default function MemberForm({
       .replace(/(\s+)/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  const handleSolarBirthChange = (
+    field: "day" | "month" | "year",
+    val: string,
+  ) => {
+    const num = val ? Number(val) : "";
+    let d = birthDay;
+    let m = birthMonth;
+    let y = birthYear;
+
+    if (field === "day") {
+      d = num;
+      setBirthDay(num);
+    } else if (field === "month") {
+      m = num;
+      setBirthMonth(num);
+    } else if (field === "year") {
+      y = num;
+      setBirthYear(num);
+    }
+
+    if (d !== "" && m !== "" && y !== "" && y > 100) {
+      try {
+        const solar = Solar.fromYmd(y, m, d);
+        const lunar = solar.getLunar();
+        setBirthLunarDay(lunar.getDay());
+        setBirthLunarMonth(Math.abs(lunar.getMonth()));
+        setBirthLunarYear(lunar.getYear());
+      } catch {
+        // Ignore invalid dates
+      }
+    }
+  };
+
+  const handleLunarBirthChange = (
+    field: "day" | "month" | "year",
+    val: string,
+  ) => {
+    const num = val ? Number(val) : "";
+    let d = birthLunarDay;
+    let m = birthLunarMonth;
+    let y = birthLunarYear;
+
+    if (field === "day") {
+      d = num;
+      setBirthLunarDay(num);
+    } else if (field === "month") {
+      m = num;
+      setBirthLunarMonth(num);
+    } else if (field === "year") {
+      y = num;
+      setBirthLunarYear(num);
+    }
+
+    if (d !== "" && m !== "" && y !== "" && y > 100) {
+      try {
+        const lunar = Lunar.fromYmd(y, m, d);
+        const solar = lunar.getSolar();
+        setBirthDay(solar.getDay());
+        setBirthMonth(solar.getMonth());
+        setBirthYear(solar.getYear());
+      } catch {
+        // Ignore invalid dates
+      }
+    }
   };
 
   const handleSolarDeathChange = (
@@ -215,6 +309,12 @@ export default function MemberForm({
       return;
     }
 
+    if (hasDifferentLegalBirth && !isValidDate(legalBirthDay, legalBirthMonth, legalBirthYear)) {
+      setError("Ngày sinh trên giấy tờ không hợp lệ. Vui lòng kiểm tra lại.");
+      setLoading(false);
+      return;
+    }
+
     let finalDeathDay = deathDay;
     let finalDeathMonth = deathMonth;
     let finalDeathYear = deathYear;
@@ -301,6 +401,13 @@ export default function MemberForm({
         birth_year: birthYear === "" ? null : Number(birthYear),
         birth_month: birthMonth === "" ? null : Number(birthMonth),
         birth_day: birthDay === "" ? null : Number(birthDay),
+        birth_lunar_year: birthLunarYear === "" ? null : Number(birthLunarYear),
+        birth_lunar_month: birthLunarMonth === "" ? null : Number(birthLunarMonth),
+        birth_lunar_day: birthLunarDay === "" ? null : Number(birthLunarDay),
+        legal_birth_year: hasDifferentLegalBirth && legalBirthYear !== "" ? Number(legalBirthYear) : null,
+        legal_birth_month: hasDifferentLegalBirth && legalBirthMonth !== "" ? Number(legalBirthMonth) : null,
+        legal_birth_day: hasDifferentLegalBirth && legalBirthDay !== "" ? Number(legalBirthDay) : null,
+        birthday_remind_type: birthdayRemindType,
         death_year:
           isDeceased && finalDeathYear !== "" ? Number(finalDeathYear) : null,
         death_month:
@@ -667,42 +774,227 @@ export default function MemberForm({
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-              Ngày sinh dương lịch
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              <input
-                type="number"
-                placeholder="Ngày"
-                min="1"
-                max="31"
-                value={birthDay}
-                onChange={(e) =>
-                  setBirthDay(e.target.value ? Number(e.target.value) : "")
-                }
-                className={inputClasses}
-              />
-              <input
-                type="number"
-                placeholder="Tháng"
-                min="1"
-                max="12"
-                value={birthMonth}
-                onChange={(e) =>
-                  setBirthMonth(e.target.value ? Number(e.target.value) : "")
-                }
-                className={inputClasses}
-              />
-              <input
-                type="number"
-                placeholder="Năm"
-                value={birthYear}
-                onChange={(e) =>
-                  setBirthYear(e.target.value ? Number(e.target.value) : "")
-                }
-                className={inputClasses}
-              />
+          {/* Ngày sinh thực tế */}
+          <div className="md:col-span-2 bg-stone-50/50 p-5 rounded-2xl border border-stone-200/60 shadow-xs space-y-4">
+            <h4 className="text-sm font-semibold text-stone-850 flex items-center gap-1.5">
+              <span>📅</span> Ngày sinh thực tế
+            </h4>
+            <p className="text-[13px] text-stone-500 italic">
+              * Nhập Ngày Dương lịch hoặc Ngày Âm lịch. Hệ thống sẽ tự động tính toán và điền phần còn lại.
+            </p>
+            
+            <div className="space-y-4">
+              {/* Dương lịch thực tế */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-600 mb-1">
+                  Ngày sinh thực tế (Dương lịch)
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <input
+                    type="number"
+                    placeholder="Ngày"
+                    min="1"
+                    max="31"
+                    value={birthDay}
+                    onChange={(e) => handleSolarBirthChange("day", e.target.value)}
+                    className={inputClasses}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Tháng"
+                    min="1"
+                    max="12"
+                    value={birthMonth}
+                    onChange={(e) => handleSolarBirthChange("month", e.target.value)}
+                    className={inputClasses}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Năm"
+                    value={birthYear}
+                    onChange={(e) => handleSolarBirthChange("year", e.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
+
+              {/* Âm lịch thực tế */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-600 mb-1">
+                  Ngày sinh thực tế (Âm lịch)
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <input
+                    type="number"
+                    placeholder="Ngày"
+                    min="1"
+                    max="31"
+                    value={birthLunarDay}
+                    onChange={(e) => handleLunarBirthChange("day", e.target.value)}
+                    className={inputClasses}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Tháng"
+                    min="1"
+                    max="12"
+                    value={birthLunarMonth}
+                    onChange={(e) => handleLunarBirthChange("month", e.target.value)}
+                    className={inputClasses}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Năm"
+                    value={birthLunarYear}
+                    onChange={(e) => handleLunarBirthChange("year", e.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Checkbox khác ngày sinh giấy tờ */}
+            <div className="pt-2 border-t border-stone-200/50">
+              <label className="flex items-center gap-3 group cursor-pointer">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={hasDifferentLegalBirth}
+                    onChange={(e) => {
+                      setHasDifferentLegalBirth(e.target.checked);
+                      if (!e.target.checked) {
+                        setLegalBirthDay("");
+                        setLegalBirthMonth("");
+                        setLegalBirthYear("");
+                        if (birthdayRemindType === "legal_solar") {
+                          setBirthdayRemindType("actual_solar");
+                        }
+                      }
+                    }}
+                    className="peer sr-only"
+                  />
+                  <div className="size-5 border-2 border-stone-300 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-colors flex items-center justify-center">
+                    <motion.svg
+                      initial={false}
+                      animate={{
+                        opacity: hasDifferentLegalBirth ? 1 : 0,
+                        scale: hasDifferentLegalBirth ? 1 : 0.5,
+                      }}
+                      className="size-3 text-white pointer-events-none"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={4}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </motion.svg>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-stone-600 group-hover:text-amber-700 transition-colors">
+                  Khác ngày sinh trên giấy tờ (khai sinh muộn, lệch ngày...)
+                </span>
+              </label>
+            </div>
+
+            {/* Form nhập ngày sinh giấy tờ */}
+            <AnimatePresence>
+              {hasDifferentLegalBirth && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  className="overflow-hidden space-y-2 pt-2 border-t border-stone-200/50"
+                >
+                  <label className="block text-xs font-semibold text-stone-600">
+                    Ngày sinh trên giấy tờ (Dương lịch)
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <input
+                      type="number"
+                      placeholder="Ngày"
+                      min="1"
+                      max="31"
+                      value={legalBirthDay}
+                      onChange={(e) =>
+                        setLegalBirthDay(e.target.value ? Number(e.target.value) : "")
+                      }
+                      className={inputClasses}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Tháng"
+                      min="1"
+                      max="12"
+                      value={legalBirthMonth}
+                      onChange={(e) =>
+                        setLegalBirthMonth(e.target.value ? Number(e.target.value) : "")
+                      }
+                      className={inputClasses}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Năm"
+                      value={legalBirthYear}
+                      onChange={(e) =>
+                        setLegalBirthYear(e.target.value ? Number(e.target.value) : "")
+                      }
+                      className={inputClasses}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Segmented Control - Birthday Reminder Type */}
+            <div className="pt-4 border-t border-stone-200/50 space-y-2">
+              <label className="block text-xs font-semibold text-stone-600">
+                Báo sinh nhật hằng năm theo:
+              </label>
+              <div className="inline-flex p-1 bg-stone-100/80 border border-stone-200/50 rounded-xl gap-1 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setBirthdayRemindType("actual_solar")}
+                  className={`flex-1 sm:flex-initial text-center px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    birthdayRemindType === "actual_solar"
+                      ? "bg-white text-stone-850 shadow-xs border border-stone-200/20"
+                      : "text-stone-500 hover:text-stone-800"
+                  }`}
+                >
+                  Dương thực tế
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBirthdayRemindType("actual_lunar")}
+                  className={`flex-1 sm:flex-initial text-center px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    birthdayRemindType === "actual_lunar"
+                      ? "bg-white text-stone-850 shadow-xs border border-stone-200/20"
+                      : "text-stone-500 hover:text-stone-800"
+                  }`}
+                >
+                  Âm thực tế
+                </button>
+                <button
+                  type="button"
+                  disabled={!hasDifferentLegalBirth}
+                  onClick={() => setBirthdayRemindType("legal_solar")}
+                  className={`flex-1 sm:flex-initial text-center px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                    !hasDifferentLegalBirth
+                      ? "opacity-40 cursor-not-allowed text-stone-400"
+                      : "cursor-pointer"
+                  } ${
+                    hasDifferentLegalBirth && birthdayRemindType === "legal_solar"
+                      ? "bg-white text-stone-850 shadow-xs border border-stone-200/20"
+                      : "text-stone-500 hover:text-stone-800"
+                  }`}
+                  title={!hasDifferentLegalBirth ? "Chỉ chọn được khi có Ngày sinh giấy tờ khác ngày thực tế" : ""}
+                >
+                  Dương giấy tờ
+                </button>
+              </div>
             </div>
           </div>
 

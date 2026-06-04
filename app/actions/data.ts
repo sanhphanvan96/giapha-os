@@ -18,6 +18,13 @@ interface PersonExport {
   birth_year: number | null;
   birth_month: number | null;
   birth_day: number | null;
+  birth_lunar_year: number | null;
+  birth_lunar_month: number | null;
+  birth_lunar_day: number | null;
+  legal_birth_year: number | null;
+  legal_birth_month: number | null;
+  legal_birth_day: number | null;
+  birthday_remind_type?: "actual_solar" | "actual_lunar" | "legal_solar";
   death_year: number | null;
   death_month: number | null;
   death_day: number | null;
@@ -84,6 +91,13 @@ function sanitizePerson(
     birth_year: p.birth_year ?? null,
     birth_month: p.birth_month ?? null,
     birth_day: p.birth_day ?? null,
+    birth_lunar_year: p.birth_lunar_year ?? null,
+    birth_lunar_month: p.birth_lunar_month ?? null,
+    birth_lunar_day: p.birth_lunar_day ?? null,
+    legal_birth_year: p.legal_birth_year ?? null,
+    legal_birth_month: p.legal_birth_month ?? null,
+    legal_birth_day: p.legal_birth_day ?? null,
+    birthday_remind_type: p.birthday_remind_type ?? "actual_solar",
     death_year: p.death_year ?? null,
     death_month: p.death_month ?? null,
     death_day: p.death_day ?? null,
@@ -137,7 +151,7 @@ export async function exportData(
 
   // Fetch ALL rows using pagination to avoid the 1000-row Supabase limit.
   const fetchAll = async (table: string, selectCols: string, orderBy: string) => {
-    let allData: any[] = [];
+    let allData: unknown[] = [];
     let from = 0;
     const step = 1000;
     while (true) {
@@ -160,7 +174,7 @@ export async function exportData(
   try {
     allPersons = await fetchAll(
       "persons",
-      "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at",
+      "id, full_name, gender, birth_year, birth_month, birth_day, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at",
       "created_at"
     );
     allRels = await fetchAll(
@@ -179,8 +193,8 @@ export async function exportData(
       "id, name, content, event_date, location, created_by",
       "event_date"
     );
-  } catch (error: any) {
-    return { error: "Lỗi tải dữ liệu: " + error.message };
+  } catch (error) {
+    return { error: "Lỗi tải dữ liệu: " + (error as Error).message };
   }
 
   let exportPersons = (allPersons ?? []) as PersonExport[];

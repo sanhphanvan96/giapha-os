@@ -47,6 +47,16 @@ export interface Person {
   death_lunar_month: number | null;
   death_lunar_day: number | null;
 
+  birth_lunar_year: number | null;
+  birth_lunar_month: number | null;
+  birth_lunar_day: number | null;
+
+  legal_birth_year: number | null;
+  legal_birth_month: number | null;
+  legal_birth_day: number | null;
+
+  birthday_remind_type: "actual_solar" | "actual_lunar" | "legal_solar";
+
   // New fields
   is_deceased: boolean;
   is_in_law: boolean;
