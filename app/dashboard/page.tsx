@@ -13,7 +13,6 @@ import {
   Star,
   Users,
   Image as ImageIcon,
-  Info,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -108,15 +107,6 @@ export default async function DashboardLaunchpad() {
       bgColor: "bg-pink-50",
       borderColor: "border-pink-200/60",
       hoverColor: "hover:border-pink-400 hover:shadow-pink-100",
-    },
-    {
-      title: "Giới thiệu & Liên hệ",
-      description: "Thông tin về ứng dụng và đội ngũ phát triển",
-      icon: <Info className="size-8 text-stone-600" />,
-      href: "/about",
-      bgColor: "bg-stone-50",
-      borderColor: "border-stone-200/60",
-      hoverColor: "hover:border-stone-400 hover:shadow-stone-100",
     },
   ];
 
