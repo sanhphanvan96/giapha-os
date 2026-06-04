@@ -79,6 +79,37 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Check if authenticated user has been approved by admin
+  const isPendingPage = request.nextUrl.pathname.startsWith("/pending-approval");
+  if (isProtectedPath && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", user.id)
+      .single();
+
+    if (profile && profile.is_active === false) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/pending-approval";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect pending-approval page away if user is already active
+  if (isPendingPage && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.is_active === true) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect users who are already logged in away from the login page
   if (isLoginPage && user) {
     const url = request.nextUrl.clone();
