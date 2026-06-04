@@ -274,12 +274,9 @@ BEGIN
   VALUES (
     new.id, 
     CASE WHEN is_first_user THEN 'admin'::public.user_role_enum ELSE 'member'::public.user_role_enum END,
-    true
+    -- First user (admin) is immediately active; all others start inactive pending approval
+    CASE WHEN is_first_user THEN true ELSE false END
   );
-
-  UPDATE public.profiles 
-  SET is_active = true 
-  WHERE id = new.id AND is_first_user = true;
 
   RETURN new;
 END;
@@ -289,14 +286,15 @@ $$;
 CREATE OR REPLACE FUNCTION public.handle_first_user_confirmation()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = auth
+SECURITY DEFINER SET search_path = public, auth
 AS $$
 BEGIN
-  -- If no users exist yet, auto-confirm this first one
+  -- If no users exist yet, auto-confirm this first admin user
   IF NOT EXISTS (SELECT 1 FROM auth.users) THEN
     NEW.email_confirmed_at := NOW();
     NEW.last_sign_in_at := NOW();
   END IF;
+
   RETURN NEW;
 END;
 $$;

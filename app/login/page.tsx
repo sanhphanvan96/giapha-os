@@ -55,7 +55,24 @@ export default function LoginPage() {
         });
 
         if (error) {
-          setError(error.message);
+          // Map Supabase auth errors to Vietnamese
+          if (
+            error.message.includes("Invalid login credentials") ||
+            error.message.includes("invalid_credentials")
+          ) {
+            setError("Email hoặc mật khẩu không đúng.");
+          } else if (error.message.includes("Email not confirmed")) {
+            setError("Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.");
+          } else if (
+            error.message.includes("rate limit") ||
+            error.message.includes("too many requests")
+          ) {
+            setError(
+              "Bạn đã thử quá nhiều lần. Vui lòng chờ một lút rồi thử lại.",
+            );
+          } else {
+            setError("Đăng nhập thất bại. Vui lòng thử lại.");
+          }
         } else {
           router.push("/dashboard");
           router.refresh();
@@ -83,39 +100,51 @@ export default function LoginPage() {
             return;
           }
 
-          setError(error.message);
+          // Map Supabase signup errors to Vietnamese
+          if (
+            error.message.includes("Password should be at least") ||
+            error.message.includes("password")
+          ) {
+            setError("Mật khẩu phải có ít nhất 6 ký tự.");
+          } else if (
+            error.message.includes("rate limit") ||
+            error.message.includes("too many requests") ||
+            error.message.includes("email rate limit")
+          ) {
+            setError(
+              "Bạn đã thử quá nhiều lần. Vui lòng chờ một lút rồi thử lại.",
+            );
+          } else {
+            setError("Đăng ký thất bại. Vui lòng thử lại.");
+          }
         } else if (data.user?.identities && data.user.identities.length === 0) {
           setError(
             "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
           );
         } else {
-          if (data.session) {
+          // Try to sign in immediately (catches auto-confirmed first admin)
+          const { data: signInData, error: signInError } =
+            await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+
+          if (!signInError && signInData.session) {
+            // Signed in — middleware will redirect based on is_active
             router.push("/dashboard");
             router.refresh();
           } else {
-            // Attempt to sign in immediately (catches auto-confirmed first admin)
-            const { data: signInData, error: signInError } =
-              await supabase.auth.signInWithPassword({
-                email,
-                password,
-              });
-
-            if (!signInError && signInData.session) {
-              router.push("/dashboard");
-              router.refresh();
-            } else {
-              setSuccessMessage(
-                "Đăng ký thành công! Vui lòng chờ admin kích hoạt tài khoản để xem nội dung.",
-              );
-              setIsLogin(true); // Switch back to login view
-              setConfirmPassword(""); // clear confirm password
-              setPassword(""); // clear password
-            }
+            setSuccessMessage(
+              "Đăng ký thành công! Vui lòng chờ quản trị viên phê duyệt tài khoản.",
+            );
+            setIsLogin(true);
+            setConfirmPassword("");
+            setPassword("");
           }
         }
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -321,6 +350,7 @@ export default function LoginPage() {
                 <div className="grow border-t border-stone-200"></div>
               </div>
 
+              {/* Toggle between login and signup */}
               <button
                 type="button"
                 onClick={() => {
