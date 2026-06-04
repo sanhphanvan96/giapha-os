@@ -127,7 +127,6 @@ export default function MemberDetailContent({
           >
             {person.avatar_url ? (
               <Image
-                unoptimized
                 src={person.avatar_url}
                 alt={person.full_name}
                 width={128}

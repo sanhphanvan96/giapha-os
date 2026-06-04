@@ -96,7 +96,6 @@ function PersonSelector({
             {selected ? (
               selected.avatar_url ? (
                 <Image
-                  unoptimized
                   src={selected.avatar_url}
                   alt={selected.full_name}
                   width={40}
@@ -177,7 +176,6 @@ function PersonSelector({
                       >
                         {p.avatar_url ? (
                           <Image
-                            unoptimized
                             src={p.avatar_url}
                             alt={p.full_name}
                             width={32}
