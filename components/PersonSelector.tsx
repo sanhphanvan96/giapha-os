@@ -48,7 +48,8 @@ export default function PersonSelector({
 
   const filteredPersons = persons
     .filter((p) => {
-      const searchStr = `${p.full_name} ${p.birth_year || ""}`.toLowerCase();
+      const searchStr =
+        `${p.full_name} ${p.other_names ?? ""} ${p.birth_year || ""}`.toLowerCase();
       return searchStr.includes(searchTerm.toLowerCase());
     })
     .slice(0, 20);
@@ -165,6 +166,13 @@ export default function PersonSelector({
                   placeholder="Tìm thành viên..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (filteredPersons.length > 0)
+                        handleSelect(filteredPersons[0].id);
+                    }
+                  }}
                   autoFocus
                 />
               </div>

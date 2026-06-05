@@ -2,6 +2,7 @@
 
 import {
   adminCreateUser,
+  adminSetUserPerson,
   changeUserRole,
   deleteUser,
   toggleUserStatus,
@@ -15,6 +16,7 @@ import { useEffect, useState } from "react";
 interface AdminUserListProps {
   initialUsers: AdminUserData[];
   currentUserId: string;
+  persons: { id: string; full_name: string }[];
 }
 
 interface Notification {
@@ -25,6 +27,7 @@ interface Notification {
 export default function AdminUserList({
   initialUsers,
   currentUserId,
+  persons,
 }: AdminUserListProps) {
   const [users, setUsers] = useState<AdminUserData[]>(initialUsers);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -189,6 +192,42 @@ export default function AdminUserList({
     }
   };
 
+  const handlePersonChange = async (
+    userId: string,
+    personId: string | null,
+  ) => {
+    try {
+      setLoadingId(userId);
+      const result = await adminSetUserPerson(userId, personId);
+      if (result?.error) {
+        showNotification(result.error, "error");
+        return;
+      }
+      const person = persons.find((p) => p.id === personId) ?? null;
+      setUsers(
+        users.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                person_id: personId,
+                person_full_name: person?.full_name ?? null,
+              }
+            : u,
+        ),
+      );
+      showNotification(
+        personId ? "Đã gắn thành viên cho người dùng." : "Đã bỏ gắn thành viên.",
+        "success",
+      );
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error ? error.message : "Lỗi không xác định";
+      showNotification(msg, "error");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 relative">
       <AnimatePresence>
@@ -292,6 +331,9 @@ export default function AdminUserList({
                   Trạng thái
                 </th>
                 <th className="px-6 py-4 text-stone-500 font-semibold text-xs">
+                  Thành viên
+                </th>
+                <th className="px-6 py-4 text-stone-500 font-semibold text-xs">
                   Ngày tạo
                 </th>
                 <th className="px-6 py-4 text-stone-500 font-semibold text-xs text-right">
@@ -364,6 +406,27 @@ export default function AdminUserList({
                       {user.is_active ? "Đã duyệt" : "Chờ duyệt"}
                     </button>
                   </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={user.person_id ?? ""}
+                      onChange={(e) =>
+                        handlePersonChange(
+                          user.id,
+                          e.target.value || null,
+                        )
+                      }
+                      disabled={loadingId === user.id}
+                      className="bg-stone-50 text-stone-700 border border-stone-200 text-xs rounded-md focus:ring-amber-500 focus:border-amber-500 px-2 py-1 hover:border-stone-300 transition-colors disabled:opacity-50 outline-none max-w-[180px] truncate"
+                      title={user.person_full_name ?? "Chưa gắn thành viên"}
+                    >
+                      <option value="">— Chưa gắn —</option>
+                      {persons.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-6 py-4 text-stone-500">
                     {new Date(user.created_at).toLocaleDateString("vi-VN")}
                   </td>
@@ -389,7 +452,7 @@ export default function AdminUserList({
               {users.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={6}
                     className="px-6 py-8 text-center text-stone-500"
                   >
                     Không tìm thấy người dùng nào.

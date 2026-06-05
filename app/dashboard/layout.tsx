@@ -3,7 +3,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import Footer from "@/components/Footer";
 import LogoutButton from "@/components/LogoutButton";
 import { UserProvider } from "@/components/UserProvider";
-import { getProfile, getSupabase, getUser } from "@/utils/supabase/queries";
+import { getProfile, getUser } from "@/utils/supabase/queries";
 import { createHash } from "crypto";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -22,12 +22,12 @@ export default async function DashboardLayout({
 
   const profile = await getProfile(user.id);
 
+  // Gravatar as in-memory fallback — NOT written to DB so avatar_url=null always
+  // means "no custom uploaded avatar". Uploading a custom avatar stores the
+  // storage URL in DB; removing it sets avatar_url back to null → gravatar shows again.
   if (profile && !profile.avatar_url && user.email) {
     const hash = createHash("md5").update(user.email.trim().toLowerCase()).digest("hex");
-    const gravatarUrl = `https://www.gravatar.com/avatar/${hash}?d=mp&s=200`;
-    const supabase = await getSupabase();
-    await supabase.from("profiles").update({ avatar_url: gravatarUrl }).eq("id", user.id);
-    profile.avatar_url = gravatarUrl;
+    profile.avatar_url = `https://www.gravatar.com/avatar/${hash}?d=mp&s=200`;
   }
 
   if (!profile?.is_active) {

@@ -13,12 +13,16 @@ interface FamilyNodeCardProps {
   onClickCard?: () => void;
   onClickName?: (e: React.MouseEvent) => void;
   level: number;
+  kinshipLabel?: string; // danh xưng tương đối với ego (khi "Xem với tư cách là" được bật)
+  isEgo?: boolean; // đây chính là người được chọn làm ego
 }
 
 export default function FamilyNodeCard({
   person,
   onClickCard,
   onClickName,
+  kinshipLabel,
+  isEgo,
 }: FamilyNodeCardProps) {
   const { showAvatar, showNameOnly, setMemberModalId } = useMemberListView();
 
@@ -31,6 +35,7 @@ export default function FamilyNodeCard({
         group py-2 px-1 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 rounded-3xl relative h-full
         ${isDeceased ? "grayscale-[0.4] opacity-80" : ""}
         ${showAvatar ? "w-20 sm:w-24 md:w-28 bg-surface/70 backdrop-blur-xl hover:shadow-soft-hover" : "px-3"}
+        ${isEgo ? "ring-2 ring-amber-400 ring-offset-1" : ""}
       `}
     >
       {/* 1. Avatar */}
@@ -99,6 +104,21 @@ export default function FamilyNodeCard({
             return person.full_name;
           })()}
         </div>
+
+        {/* 3. Kinship label pill (when "Xem với tư cách là" is active) */}
+        {isEgo && (
+          <span className="inline-block max-w-full truncate rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight text-white" title="Tôi">
+            Tôi
+          </span>
+        )}
+        {!isEgo && kinshipLabel && (
+          <span
+            className="inline-block max-w-full truncate rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium leading-tight text-amber-800"
+            title={kinshipLabel}
+          >
+            {kinshipLabel}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -4,12 +4,13 @@ import MemberDetailContent from "@/context/MemberDetailContent";
 import MemberForm from "@/components/MemberForm";
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Edit2, ExternalLink, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Edit2, ExternalLink, UserCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useMemberListView } from "@/context/MemberListContext";
 import { useUser } from "@/components/UserProvider";
+import { linkMyPerson } from "@/app/actions/user";
 
 export default function MemberDetailModal() {
   const {
@@ -17,11 +18,14 @@ export default function MemberDetailModal() {
     setMemberModalId,
     showCreateMember,
     setShowCreateMember,
+    setViewAsPersonId,
+    setView,
   } = useMemberListView();
-  const { isAdmin, isEditor: canEdit, supabase } = useUser();
+  const { isAdmin, isEditor: canEdit, supabase, profile } = useUser();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +40,17 @@ export default function MemberDetailModal() {
     setMemberModalId(null);
     setShowCreateMember(false);
     setIsEditing(false);
+  };
+
+  const handleLinkPerson = async (personId: string | null) => {
+    setIsLinking(true);
+    const result = await linkMyPerson(personId);
+    setIsLinking(false);
+    if ("error" in result) {
+      console.error("Link person failed:", result.error);
+      return;
+    }
+    router.refresh();
   };
 
   const fetchData = useCallback(
@@ -188,23 +203,60 @@ export default function MemberDetailModal() {
                   <span className="hidden sm:inline">Quay lại</span>
                 </button>
               ) : (
-                canEdit &&
                 person && (
                   <>
-                    <Link
-                      href={`/dashboard/members/${person.id}`}
-                      className="btn-amber text-sm"
-                    >
-                      <ExternalLink className="size-4" />
-                      <span className="hidden sm:inline">Xem</span>
-                    </Link>
+                    {canEdit && (
+                      <>
+                        <Link
+                          href={`/dashboard/members/${person.id}`}
+                          className="btn-amber text-sm"
+                        >
+                          <ExternalLink className="size-4" />
+                          <span className="hidden sm:inline">Xem</span>
+                        </Link>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="btn-amber text-sm"
+                        >
+                          <Edit2 className="size-4" />
+                          <span className="hidden sm:inline">Chỉnh sửa</span>
+                        </button>
+                      </>
+                    )}
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => {
+                        setViewAsPersonId(person.id);
+                        setView("tree");
+                        closeModal();
+                      }}
                       className="btn-amber text-sm"
+                      title="Xem cây gia phả với tư cách người này"
                     >
-                      <Edit2 className="size-4" />
-                      <span className="hidden sm:inline">Chỉnh sửa</span>
+                      <UserCheck className="size-4" />
+                      <span className="hidden sm:inline">Xem với tư cách</span>
                     </button>
+                    {/* "Đây là tôi" / "Bỏ liên kết" */}
+                    {profile?.person_id === person.id ? (
+                      <button
+                        onClick={() => handleLinkPerson(null)}
+                        disabled={isLinking}
+                        className="btn-amber text-sm opacity-80"
+                        title="Bỏ liên kết tài khoản với người này"
+                      >
+                        <UserCheck className="size-4" />
+                        <span className="hidden sm:inline">Bỏ liên kết</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleLinkPerson(person.id)}
+                        disabled={isLinking}
+                        className="btn-amber text-sm"
+                        title="Đánh dấu đây là tôi"
+                      >
+                        <UserCheck className="size-4" />
+                        <span className="hidden sm:inline">Đây là tôi</span>
+                      </button>
+                    )}
                   </>
                 )
               )}

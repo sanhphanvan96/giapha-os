@@ -34,6 +34,8 @@ interface MemberListViewState {
   setHideExpandButtons: (val: boolean) => void;
   autoCollapseLevel: number;
   setAutoCollapseLevel: (val: number) => void;
+  viewAsPersonId: string | null;
+  setViewAsPersonId: (id: string | null) => void;
 }
 
 export const MemberListContext = createContext<MemberListViewState | undefined>(
@@ -45,11 +47,14 @@ export function MemberListProvider({
   initialView,
   initialRootId,
   initialShowAvatar,
+  initialViewAsPersonId,
 }: {
   children: React.ReactNode;
   initialView?: ViewMode;
   initialRootId?: string | null;
   initialShowAvatar?: boolean;
+  /** Auto-select this person as the view-as ego when view=tree and URL has no viewAs param */
+  initialViewAsPersonId?: string | null;
 }) {
   const searchParams = useSearchParams();
 
@@ -68,6 +73,32 @@ export function MemberListProvider({
   const [rootId, setRootIdState] = useState<string | null>(
     () => initialRootId ?? searchParams.get("rootId") ?? null,
   );
+  // If URL has viewAs → use it. Otherwise fall back to initialViewAsPersonId
+  // (only for tree view), so the linked member is auto-selected as ego on first load.
+  const effectiveInitialView =
+    initialView ?? (searchParams.get("view") as ViewMode | null) ?? "tree";
+  const urlViewAs = searchParams.get("viewAs");
+  const [viewAsPersonId, setViewAsPersonIdState] = useState<string | null>(
+    () =>
+      urlViewAs ??
+      (effectiveInitialView === "tree" ? (initialViewAsPersonId ?? null) : null),
+  );
+
+  // On first mount: if viewAsPersonId was seeded from initialViewAsPersonId (no URL param),
+  // write it into the URL so syncFromURL keeps it consistent. Only runs once.
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      urlViewAs ||
+      !initialViewAsPersonId ||
+      effectiveInitialView !== "tree"
+    )
+      return;
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("viewAs", initialViewAsPersonId);
+    window.history.replaceState(null, "", newUrl.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Shared filter state — persists when switching between Tree / Mindmap / Bubble
   const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);
@@ -77,7 +108,7 @@ export function MemberListProvider({
   const [hideMales, setHideMales] = useState(false);
   const [hideFemales, setHideFemales] = useState(false);
   const [hideExpandButtons, setHideExpandButtons] = useState(false);
-  const [autoCollapseLevel, setAutoCollapseLevel] = useState(2);
+  const [autoCollapseLevel, setAutoCollapseLevel] = useState(0);
 
   // Initialize from URL and listen to Next.js route changes
   useEffect(() => {
@@ -94,6 +125,8 @@ export function MemberListProvider({
 
       const rootIdParam = sp.get("rootId");
       setRootIdState(rootIdParam);
+
+      setViewAsPersonIdState(sp.get("viewAs"));
 
       const modalId = sp.get("memberModalId");
       setMemberModalId(modalId);
@@ -151,6 +184,19 @@ export function MemberListProvider({
     }
   };
 
+  const setViewAsPersonId = (id: string | null) => {
+    setViewAsPersonIdState(id);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      if (id) {
+        newUrl.searchParams.set("viewAs", id);
+      } else {
+        newUrl.searchParams.delete("viewAs");
+      }
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
   return (
     <MemberListContext.Provider
       value={{
@@ -182,6 +228,8 @@ export function MemberListProvider({
         setHideExpandButtons,
         autoCollapseLevel,
         setAutoCollapseLevel,
+        viewAsPersonId,
+        setViewAsPersonId,
       }}
     >
       {children}
@@ -221,8 +269,10 @@ export function useMemberListView(): MemberListViewState {
       setHideFemales: () => {},
       hideExpandButtons: false,
       setHideExpandButtons: () => {},
-      autoCollapseLevel: 2,
+      autoCollapseLevel: 0,
       setAutoCollapseLevel: () => {},
+      viewAsPersonId: null,
+      setViewAsPersonId: () => {},
     };
   }
   return context;

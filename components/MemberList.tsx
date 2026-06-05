@@ -23,9 +23,10 @@ export default function MemberList({
 
   const filteredPersons = useMemo(() => {
     return initialPersons.filter((person) => {
-      const matchesSearch = person.full_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        person.full_name.toLowerCase().includes(term) ||
+        (person.other_names?.toLowerCase().includes(term) ?? false);
 
       let matchesFilter = true;
       switch (filterOption) {

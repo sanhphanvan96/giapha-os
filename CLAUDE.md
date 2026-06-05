@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## MCP Tools
+
+Two MCP servers are active. Prefer them over built-in tools when applicable — they are faster and cheaper.
+
+**Serena** — semantic, symbol-aware code navigation. Call `initial_instructions` before any coding task.
+- `find_symbol` / `get_symbols_overview` → understand structure without reading whole files
+- `find_referencing_symbols` / `find_implementations` → replace `grep -rn` for symbols
+- `get_diagnostics_for_file` → quick TypeScript check without running `bun build`
+- `find_declaration` → jump to where a type/function is defined
+
+**fast-filesystem** — text/pattern-based file operations, complements Serena.
+- `fast_read_multiple_files` → read many files in one call (vs N `Read` calls)
+- `fast_search_code` → code search without Bash
+- `fast_get_directory_tree` → explore directory structure
+- `fast_edit_multiple_blocks` → apply multiple edits in one file in a single call
+- `fast_extract_lines` → read exact line ranges efficiently
+
 ## Commands
 
 ```bash
@@ -15,7 +32,7 @@ This project uses **Bun** as the package manager. Do not use npm or yarn.
 
 ## Git
 
-Never commit or push unless the user explicitly asks.
+**Never** `git add`, `git commit`, or `git push` unless the user explicitly asks. This rule has no exceptions — do not stage or commit even documentation, plans, or config files without being asked.
 
 ## Environment
 
@@ -26,6 +43,32 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 SITE_NAME=         # optional display name
 ```
+
+## Database Migrations
+
+Files in `supabase/migrations/`. Dùng `supabase migration new <name>` để tạo (tự sinh timestamp 14 chữ số).
+
+```bash
+supabase migration up   # apply lên local — không mất data
+supabase db push        # apply lên production — không mất data
+```
+
+First-time setup (login, link, pull baseline): xem [`docs/runbook-migrations.md`](docs/runbook-migrations.md).
+
+## Plans
+
+Every non-trivial feature or fix must have a **full plan** saved in `docs/plans/<feature-slug>.md` before coding begins, and kept up to date throughout. Plans live in the repo (not in agent-local paths) so any future coding session or agent can pick up where the previous one left off.
+
+A complete plan file must include:
+- **Context** — why the change is being made, what problem it solves
+- **Design decisions** — key choices and trade-offs
+- **Architecture / solution approach** — how it works, data flow
+- **Files to change** — table of file → what changes
+- **API signatures** — new or modified function/type signatures
+- **Verification** — test commands + manual browser checklist with `- [ ]` boxes
+- **Progress log** — date + commit + notes after each session
+
+Update `- [ ]` → `- [x]` as steps are completed. Never leave the plan as checklist-only without the full plan context.
 
 ## Architecture
 
@@ -38,7 +81,7 @@ Three core tables in Supabase:
 - `relationships` — edges between persons: `marriage`, `biological_child`, or `adopted_child`. In parent-child edges, `person_a` is the parent and `person_b` is the child.
 - `profiles` — extends `auth.users` with `role` (`admin`/`editor`/`member`) and `is_active`
 
-Full schema is in [`docs/schema.sql`](docs/schema.sql); incremental migrations are in [`docs/migrations/`](docs/migrations/).
+Full schema is in [`docs/schema.sql`](docs/schema.sql); incremental migrations are in [`supabase/migrations/`](supabase/migrations/).
 
 ### Auth & roles
 
@@ -55,30 +98,31 @@ Server components fetch data directly via `getSupabase()`. All mutations go thro
 
 ### Tree visualization
 
-`components/FamilyTree.tsx` renders the hierarchical tree using a custom recursive layout (not D3 layouts — D3 is used only for pan/zoom via `hooks/usePanZoom.ts`). Before rendering, `utils/treeHelpers.ts:buildAdjacencyLists()` converts the flat `relationships` array into `Map`-based adjacency lists for O(1) lookups. Children within each node are sorted by `birth_order` then `birth_year`.
-
-`components/MindmapTree.tsx` renders an alternative radial mindmap view of the same data.
+`components/FamilyTree.tsx` — custom recursive layout (D3 chỉ dùng cho pan/zoom qua `hooks/usePanZoom.ts`). `utils/treeHelpers.ts:buildAdjacencyLists()` build Map adjacency lists trước khi render. `components/MindmapTree.tsx` — radial mindmap view.
 
 ### Kinship calculator
 
-`utils/kinshipHelpers.ts` implements a BFS traversal over the relationship graph to find the shortest path between two persons and maps it to Vietnamese kinship terminology (e.g., Bác, Chú, Cô, Dì).
+`utils/kinshipHelpers.ts` — BFS trên relationship graph, map sang xưng hô tiếng Việt. Exports: `computeKinship` (pairwise), `computeEgoLabels` (batch).
 
 ### View state
 
-`context/MemberListContext.tsx` (`MemberListProvider`) holds client-side view state for the members page: active modal, view mode (`tree`/`mindmap`/`bubble`/`list`, default `tree`), avatar visibility, tree root, and all filter toggles (`hideDaughtersInLaw`, `hideSonsInLaw`, `hideDaughters`, `hideSons`, `hideMales`, `hideFemales`, `hideExpandButtons`, `autoCollapseLevel`). Filter state lives in context so it persists when switching between views. State is synced to URL search params so links are shareable.
-
-`components/UserProvider.tsx` exposes current user and profile via `useUser()` to client components.
+`context/MemberListContext.tsx` (`MemberListProvider`) — view mode, filter toggles, `viewAsPersonId`, synced to URL params. `components/UserProvider.tsx` — expose user + profile qua `useUser()`.
 
 ### Import / export
 
-`app/actions/data.ts` handles JSON, CSV (via papaparse), and GEDCOM backup/restore. `utils/gedcom.ts` and `utils/csv.ts` contain the format-specific serialization logic.
+`app/actions/data.ts` — JSON, CSV (papaparse), GEDCOM. Logic ở `utils/gedcom.ts` và `utils/csv.ts`.
+
+Chi tiết: [`docs/architecture.md`](docs/architecture.md).
 
 ## UI / Design system
 
 All UI work must follow [`DESIGN.md`](DESIGN.md) strictly — do not invent new tokens.
 
-Key design tokens:
-- **Colors:** primary `#1c1917`, secondary `#57534e`, tertiary/accent `#d97706` (amber), neutral bg `#fafaf9`, surface `#ffffff`, border `#e7e5e4`
-- **Typography:** Be Vietnam Pro for all text (headings and body); single font, weights 400–800
-- **Shapes:** `rounded-2xl`/`rounded-3xl` for cards; `rounded-full` only for avatars and icon buttons
-- **Elevation:** achieved by stacking white (`bg-white/70 backdrop-blur-xl`) on the limestone neutral — avoid heavy drop shadows
+### Mobile-first
+
+All UI must work on mobile (~375px) before desktop. Use Tailwind responsive prefixes (`sm:`, `md:`) to enhance upward — never assume a wide viewport as the base. Key patterns already in use:
+- Flex rows: `flex-col sm:flex-row`
+- Widths: `w-full sm:w-72` for selectors/inputs
+- Text: hide labels on mobile with `hidden sm:inline`, keep icons always visible
+- Touch targets: minimum `size-10` (40px) for interactive elements
+- Truncate long text with `truncate` + `title` attribute for full value on hover

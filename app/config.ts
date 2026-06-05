@@ -4,6 +4,7 @@ const config = {
   exampleEmail: process.env.EXAMPLE_EMAIL || "",
   examplePassword: process.env.EXAMPLE_PASSWORD || "",
   demoDomain: process.env.DEMO_DOMAIN || "giapha-os.homielab.com",
+  noindex: process.env.NOINDEX === "true",
 };
 
 export default config;
