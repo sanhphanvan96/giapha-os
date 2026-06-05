@@ -15,6 +15,9 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.siteUrl),
+  robots: config.noindex
+    ? { index: false, follow: false, googleBot: { index: false, follow: false } }
+    : { index: true, follow: true },
   title: {
     default: config.siteName,
     template: `%s | ${config.siteName}`,
