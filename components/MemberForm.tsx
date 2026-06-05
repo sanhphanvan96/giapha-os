@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { compressImage } from "@/utils/imageCompressor";
 
-interface MemberFormProps {
+export interface MemberFormProps {
   initialData?: Person;
   isEditing?: boolean;
   canEditPrivate?: boolean;
@@ -528,7 +528,10 @@ export default function MemberForm({
 
         const { error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(filePath, avatarFile, { upsert: true });
+          .upload(filePath, avatarFile, {
+            upsert: true,
+            cacheControl: "31536000",
+          });
 
         if (uploadError) throw uploadError;
 

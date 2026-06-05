@@ -28,10 +28,13 @@ export function UserProvider({
   const isAdmin = profile?.role === "admin";
   const isEditor = profile?.role === "editor" || isAdmin;
 
+  const value = useMemo(
+    () => ({ user, profile, isAdmin, isEditor, supabase }),
+    [user, profile, isAdmin, isEditor, supabase],
+  );
+
   return (
-    <UserContext.Provider value={{ user, profile, isAdmin, isEditor, supabase }}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={value}>{children}</UserContext.Provider>
   );
 }
 

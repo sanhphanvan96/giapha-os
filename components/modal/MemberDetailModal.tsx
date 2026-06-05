@@ -1,7 +1,9 @@
 "use client";
 
-import MemberDetailContent from "@/context/MemberDetailContent";
-import MemberForm from "@/components/MemberForm";
+import dynamic from "next/dynamic";
+
+const MemberDetailContent = dynamic(() => import("@/context/MemberDetailContent"), { ssr: false });
+const MemberForm = dynamic(() => import("@/components/MemberForm"), { ssr: false });
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Edit2, ExternalLink, Loader2, UserCheck, X } from "lucide-react";
@@ -29,8 +31,6 @@ export default function MemberDetailModal() {
   const [isLinking, setIsLinking] = useState(false);
   const [formDirty, setFormDirty] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
-
-  console.log("MemberDetailModal render:", { memberId, isEditing, formDirty, formLoading });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -222,15 +222,19 @@ export default function MemberDetailModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6"
         >
-          {/* Click-away backdrop (disabled while editing/creating to avoid accidental close) */}
-          {!isEditing && !showCreateMember && (
-            <div
-              className="absolute inset-0 cursor-pointer"
-              onClick={closeModal}
-            />
-          )}
+          {/* Lớp nền tách riêng để vùng cuộn của modal được composite trên GPU
+              (backdrop-filter trên ancestor sẽ chặn composited scrolling → giật khi cuộn lần đầu).
+              Gộp luôn click-away: chỉ đóng khi không ở chế độ chỉnh sửa/thêm mới. */}
+          <div
+            className={`absolute inset-0 bg-stone-900/40 backdrop-blur-sm ${
+              !isEditing && !showCreateMember ? "cursor-pointer" : ""
+            }`}
+            onClick={
+              !isEditing && !showCreateMember ? closeModal : undefined
+            }
+          />
 
           {/* Modal Content */}
           <motion.div
@@ -378,11 +382,7 @@ export default function MemberDetailModal() {
                     Chỉnh sửa thành viên
                   </h2>
                   <MemberForm
-                    initialData={
-                      formInitialData as Parameters<
-                        typeof MemberForm
-                      >[0]["initialData"]
-                    }
+                    initialData={formInitialData as Person}
                     isEditing={true}
                     canEditPrivate={canEdit}
                     onSuccess={handleEditSuccess}

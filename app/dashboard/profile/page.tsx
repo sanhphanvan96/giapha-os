@@ -7,16 +7,18 @@ export default async function ProfilePage() {
   const user = await getUser();
   if (!user) redirect("/login");
 
-  const [profile, supabase] = await Promise.all([
+  const supabase = await getSupabase();
+
+  // Fetch profile và persons song song — tránh waterfall tuần tự
+  const [profile, personsRes] = await Promise.all([
     getProfile(user.id),
-    getSupabase(),
+    supabase
+      .from("persons")
+      .select("id, full_name, gender, avatar_url, birth_year, is_deceased")
+      .order("full_name"),
   ]);
 
-  // Fetch all persons for the self-link selector
-  const { data: personsData } = await supabase
-    .from("persons")
-    .select("id, full_name, gender, avatar_url, birth_year, is_deceased")
-    .order("full_name");
+  const { data: personsData } = personsRes;
 
   const persons = (personsData as Pick<
     Person,
