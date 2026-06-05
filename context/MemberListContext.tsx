@@ -34,6 +34,8 @@ interface MemberListViewState {
   setHideExpandButtons: (val: boolean) => void;
   autoCollapseLevel: number;
   setAutoCollapseLevel: (val: number) => void;
+  viewAsPersonId: string | null;
+  setViewAsPersonId: (id: string | null) => void;
 }
 
 export const MemberListContext = createContext<MemberListViewState | undefined>(
@@ -68,6 +70,9 @@ export function MemberListProvider({
   const [rootId, setRootIdState] = useState<string | null>(
     () => initialRootId ?? searchParams.get("rootId") ?? null,
   );
+  const [viewAsPersonId, setViewAsPersonIdState] = useState<string | null>(
+    () => searchParams.get("viewAs") ?? null,
+  );
 
   // Shared filter state — persists when switching between Tree / Mindmap / Bubble
   const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);
@@ -77,7 +82,7 @@ export function MemberListProvider({
   const [hideMales, setHideMales] = useState(false);
   const [hideFemales, setHideFemales] = useState(false);
   const [hideExpandButtons, setHideExpandButtons] = useState(false);
-  const [autoCollapseLevel, setAutoCollapseLevel] = useState(2);
+  const [autoCollapseLevel, setAutoCollapseLevel] = useState(0);
 
   // Initialize from URL and listen to Next.js route changes
   useEffect(() => {
@@ -94,6 +99,8 @@ export function MemberListProvider({
 
       const rootIdParam = sp.get("rootId");
       setRootIdState(rootIdParam);
+
+      setViewAsPersonIdState(sp.get("viewAs"));
 
       const modalId = sp.get("memberModalId");
       setMemberModalId(modalId);
@@ -151,6 +158,19 @@ export function MemberListProvider({
     }
   };
 
+  const setViewAsPersonId = (id: string | null) => {
+    setViewAsPersonIdState(id);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      if (id) {
+        newUrl.searchParams.set("viewAs", id);
+      } else {
+        newUrl.searchParams.delete("viewAs");
+      }
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
   return (
     <MemberListContext.Provider
       value={{
@@ -182,6 +202,8 @@ export function MemberListProvider({
         setHideExpandButtons,
         autoCollapseLevel,
         setAutoCollapseLevel,
+        viewAsPersonId,
+        setViewAsPersonId,
       }}
     >
       {children}
@@ -221,8 +243,10 @@ export function useMemberListView(): MemberListViewState {
       setHideFemales: () => {},
       hideExpandButtons: false,
       setHideExpandButtons: () => {},
-      autoCollapseLevel: 2,
+      autoCollapseLevel: 0,
       setAutoCollapseLevel: () => {},
+      viewAsPersonId: null,
+      setViewAsPersonId: () => {},
     };
   }
   return context;

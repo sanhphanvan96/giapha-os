@@ -16,6 +16,7 @@ import FamilyNodeCard from "./FamilyNodeCard";
 import TreeToolbar from "./TreeToolbar";
 
 import { buildAdjacencyLists, getFilteredTreeData } from "@/utils/treeHelpers";
+import { computeEgoLabels } from "@/utils/kinshipHelpers";
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -54,7 +55,20 @@ export default function FamilyTree({
     setHideExpandButtons,
     autoCollapseLevel,
     setAutoCollapseLevel,
+    viewAsPersonId,
   } = useMemberListView();
+
+  const egoLabels = useMemo(
+    () =>
+      viewAsPersonId
+        ? computeEgoLabels(
+            viewAsPersonId,
+            Array.from(personsMap.values()),
+            relationships,
+          )
+        : null,
+    [viewAsPersonId, personsMap, relationships],
+  );
 
   const {
     scale,
@@ -147,6 +161,7 @@ export default function FamilyTree({
     hideMales,
     hideFemales,
     collapsedNodes,
+    viewAsPersonId,
   ]);
 
   const adj = useMemo(
@@ -239,7 +254,12 @@ export default function FamilyTree({
           <div
             className={`flex z-10 items-stretch h-full pb-4${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
           >
-            <FamilyNodeCard person={data.person} level={level} />
+            <FamilyNodeCard
+              person={data.person}
+              level={level}
+              kinshipLabel={egoLabels?.get(data.person.id)}
+              isEgo={viewAsPersonId === data.person.id}
+            />
 
             {data.spouses.length > 0 &&
               data.spouses.map((spouseData, idx) => (
@@ -257,9 +277,11 @@ export default function FamilyTree({
                   </div>
                   <FamilyNodeCard
                     person={spouseData.person}
-                    role={spouseData.person.gender === "male" ? "Chồng" : "Vợ"}
+                    role={egoLabels ? undefined : (spouseData.person.gender === "male" ? "Chồng" : "Vợ")}
                     note={spouseData.note}
                     level={level}
+                    kinshipLabel={egoLabels?.get(spouseData.person.id)}
+                    isEgo={viewAsPersonId === spouseData.person.id}
                   />
                 </div>
               ))}
