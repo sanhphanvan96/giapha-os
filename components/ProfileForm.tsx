@@ -6,7 +6,7 @@ import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { Camera, KeyRound, Mail, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ProfileFormProps {
   userId: string;
@@ -40,6 +40,12 @@ export default function ProfileForm({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync avatar from server prop (e.g. after router.refresh() causes remount).
+  // Skipped while uploading so the local blob preview is not clobbered.
+  useEffect(() => {
+    if (!isUploadingAvatar) setAvatarUrl(currentAvatarUrl);
+  }, [currentAvatarUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Avatar upload ──────────────────────────────────────────────────────────
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,13 +189,32 @@ export default function ProfileForm({
               className="hidden"
               onChange={handleAvatarChange}
             />
-            <button
-              onClick={() => avatarInputRef.current?.click()}
-              disabled={isUploadingAvatar}
-              className="btn-amber text-sm"
-            >
-              {isUploadingAvatar ? "Đang tải lên..." : "Đổi ảnh"}
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="btn-amber text-sm"
+              >
+                {isUploadingAvatar ? "Đang tải lên..." : "Đổi ảnh"}
+              </button>
+              {/* Show "Remove" only when user has a custom uploaded avatar (not gravatar) */}
+              {currentAvatarUrl && !currentAvatarUrl.includes("gravatar.com") && (
+                <button
+                  onClick={async () => {
+                    const result = await updateMyAvatar(null);
+                    if (!("error" in result)) {
+                      setAvatarUrl(null);
+                      setAvatarStatus({ type: "success", message: "Đã xóa ảnh đại diện." });
+                      router.refresh();
+                    }
+                  }}
+                  disabled={isUploadingAvatar}
+                  className="btn text-sm text-stone-500"
+                >
+                  Xóa ảnh
+                </button>
+              )}
+            </div>
             {avatarStatus && (
               <p
                 className={`mt-2 text-sm ${avatarStatus.type === "success" ? "text-emerald-600" : "text-red-600"}`}
