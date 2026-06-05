@@ -46,6 +46,7 @@ interface EventsListProps {
     birthday_remind_type?: string | null;
   }[];
   customEvents?: CustomEventRecord[];
+  readOnly?: boolean;
 }
 
 const DAY_LABELS: Record<string, string> = {
@@ -71,10 +72,12 @@ function EventCard({
   event,
   index,
   onEditCustomEvent,
+  readOnly = false,
 }: {
   event: FamilyEvent;
   index: number;
   onEditCustomEvent: (e: FamilyEvent) => void;
+  readOnly?: boolean;
 }) {
   const isBirthday = event.type === "birthday";
   const isCustom = event.type === "custom_event";
@@ -84,9 +87,13 @@ function EventCard({
 
   const { setMemberModalId } = useMemberListView();
 
+  const isClickable = !isCustom || !readOnly;
+
   const handleClick = () => {
     if (isCustom) {
-      onEditCustomEvent(event);
+      if (!readOnly) {
+        onEditCustomEvent(event);
+      }
     } else if (event.personId) {
       setMemberModalId(event.personId);
     }
@@ -135,14 +142,16 @@ function EventCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
       onClick={handleClick}
-      className={`w-full text-left flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] hover:shadow-md group ${isToday
+      className={`w-full text-left flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border transition-all hover:shadow-md group ${
+        isClickable ? "cursor-pointer active:scale-[0.98]" : "cursor-default"
+      } ${isToday
         ? "bg-amber-50 border-amber-300 shadow-sm"
         : isPast
           ? "bg-stone-50/60 border-stone-200/50"
           : isBirthday
             ? "bg-white/80 border-stone-200/60 hover:border-blue-200"
             : isCustom
-              ? "bg-white/80 border-stone-200/60 hover:border-purple-200"
+              ? `bg-white/80 border-stone-200/60 ${!readOnly ? "hover:border-purple-200" : ""}`
               : "bg-white/80 border-stone-200/60 hover:border-rose-200"
         }`}
     >
@@ -239,6 +248,7 @@ function EventCard({
 export default function EventsList({
   persons,
   customEvents = [],
+  readOnly = false,
 }: EventsListProps) {
   const router = useRouter();
   const [filter, setFilter] = useState<
@@ -384,13 +394,15 @@ export default function EventsList({
           </div>
         </div>
 
-        <button
-          onClick={handleOpenCreateModal}
-          className="btn-primary relative z-10 w-full sm:w-auto"
-        >
-          <Plus className="size-5 text-stone-300" />
-          <span>Thêm sự kiện</span>
-        </button>
+        {!readOnly && (
+          <button
+            onClick={handleOpenCreateModal}
+            className="btn-primary relative z-10 w-full sm:w-auto"
+          >
+            <Plus className="size-5 text-stone-300" />
+            <span>Thêm sự kiện</span>
+          </button>
+        )}
       </motion.div>
 
       {/* Controls */}
@@ -460,6 +472,7 @@ export default function EventsList({
               event={event}
               index={i}
               onEditCustomEvent={handleOpenEditModal}
+              readOnly={readOnly}
             />
           ))}
         </div>

@@ -1,10 +1,8 @@
 import config from "@/app/config";
 import Footer from "@/components/Footer";
-import MemberDetailModal from "@/components/modal/MemberDetailModal";
-import MembersViews from "@/components/MembersViews";
+import PublicShareView from "@/components/PublicShareView";
 import { UserProvider } from "@/components/UserProvider";
-import ViewToggle, { ViewMode } from "@/components/ViewToggle";
-import { MemberListProvider } from "@/context/MemberListContext";
+import { ViewMode } from "@/components/ViewToggle";
 import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/server";
 import { AlertCircle, ArrowLeft, Network } from "lucide-react";
@@ -84,63 +82,79 @@ export default async function PublicSharePage({ params }: PageProps) {
   }
 
   // Phân tách dữ liệu trả về từ RPC
-  const { settings = {}, persons = [], relationships = [] } = data as {
+  const { settings = {}, persons = [], relationships = [], custom_events = [], expires_at } = data as {
     settings: { rootId?: string | null; view?: ViewMode };
     persons: Person[];
     relationships: any[];
+    custom_events: any[];
+    expires_at?: string;
   };
 
   // Cấu hình ban đầu dựa theo cài đặt của Admin khi chia sẻ
   const initialView = settings.view || "tree";
   const initialRootId = settings.rootId || null;
 
+  // Tính thời gian còn lại của liên kết chia sẻ
+  let expiryLabel = "";
+  if (expires_at) {
+    const expiryDate = new Date(expires_at);
+    const now = new Date();
+    const diffMs = expiryDate.getTime() - now.getTime();
+    if (diffMs > 0) {
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+      if (diffHours < 24) {
+        expiryLabel = `Hết hạn sau ${diffHours} giờ`;
+      } else {
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        expiryLabel = `Hết hạn sau ${diffDays} ngày`;
+      }
+    }
+  }
+
   return (
     <UserProvider user={null} profile={null}>
-      <MemberListProvider
-        initialView={initialView}
-        initialRootId={initialRootId}
-        initialShowAvatar={true}
-        persons={persons}
-      >
-        <div className="min-h-screen bg-neutral text-primary flex flex-col font-sans">
-          {/* Header dành cho khách xem công khai */}
-          <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="size-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-200 text-amber-700 shadow-sm">
-                  <Network className="size-5" />
-                </div>
-                <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-850">
-                  {config.siteName}
-                </h1>
-                <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800">
-                  Bản xem chỉ đọc
-                </span>
+      <div className="min-h-screen bg-neutral text-primary flex flex-col font-sans">
+        {/* Header dành cho khách xem công khai */}
+        <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="size-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-200 text-amber-700 shadow-sm">
+                <Network className="size-5" />
               </div>
-              <Link
-                href="/login"
-                className="inline-flex h-9 items-center justify-center px-4 rounded-xl text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors"
-              >
-                Đăng nhập
-              </Link>
+              <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-850">
+                {config.siteName}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800 shadow-sm">
+                <span className="hidden sm:inline">Chỉ xem</span>
+                <span className="sm:hidden">Chỉ xem</span>
+                {expiryLabel && (
+                  <>
+                    <span className="text-amber-300">|</span>
+                    <span className="text-amber-700 font-medium">{expiryLabel}</span>
+                  </>
+                )}
+              </span>
             </div>
-          </header>
-
-          {/* Sơ đồ phả hệ */}
-          <div className="flex-1 flex flex-col">
-            <ViewToggle />
-            <MembersViews
-              persons={persons}
-              relationships={relationships}
-              canEdit={false}
-            />
+            <Link
+              href="/login"
+              className="inline-flex h-9 items-center justify-center px-4 rounded-xl text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors"
+            >
+              Đăng nhập
+            </Link>
           </div>
+        </header>
 
-          <MemberDetailModal />
+        {/* Tab switcher view */}
+        <PublicShareView
+          persons={persons}
+          relationships={relationships}
+          customEvents={custom_events}
+          initialView={initialView}
+          initialRootId={initialRootId}
+        />
 
-          <Footer className="mt-auto bg-white border-t border-stone-200" />
-        </div>
-      </MemberListProvider>
+        <Footer className="mt-auto bg-white border-t border-stone-200" />
+      </div>
     </UserProvider>
   );
 }
