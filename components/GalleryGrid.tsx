@@ -6,10 +6,12 @@ import { X, CalendarDays, Maximize2 } from "lucide-react";
 import dayjs from "dayjs";
 
 import { createClient } from "@/utils/supabase/client";
+import { useUser } from "@/components/UserProvider";
 
 interface GalleryGridProps {
   items: GalleryItem[];
   isAdmin?: boolean;
+  isEditor?: boolean;
   onEdit?: (item: GalleryItem) => void;
   onDeleteSuccess?: (id: string) => void;
 }
@@ -17,9 +19,11 @@ interface GalleryGridProps {
 export default function GalleryGrid({
   items,
   isAdmin,
+  isEditor,
   onEdit,
   onDeleteSuccess,
 }: GalleryGridProps) {
+  const { user } = useUser();
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -166,7 +170,7 @@ export default function GalleryGrid({
                   {dayjs(selectedItem.created_at).format("DD/MM/YYYY")}
                 </span>
 
-                {isAdmin && (
+                {(isAdmin || (isEditor && selectedItem.created_by === user?.id)) && (
                   <div className="flex gap-2">
                     <button
                       onClick={() => {

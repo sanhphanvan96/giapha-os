@@ -6,14 +6,14 @@ import GalleryGrid from "./GalleryGrid";
 import UploadModal from "./modal/UploadModal";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/components/UserProvider";
 
 export default function GalleryClient({
   initialItems,
-  isAdmin,
 }: {
   initialItems: GalleryItem[];
-  isAdmin: boolean;
 }) {
+  const { isEditor, isAdmin } = useUser();
   const [items, setItems] = useState<GalleryItem[]>(initialItems);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
@@ -57,15 +57,18 @@ export default function GalleryClient({
             </p>
           </div>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-          <Plus className="size-5" />
-          Thêm hình ảnh
-        </button>
+        {isEditor && (
+          <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+            <Plus className="size-5" />
+            Thêm hình ảnh
+          </button>
+        )}
       </div>
 
       <GalleryGrid
         items={items}
         isAdmin={isAdmin}
+        isEditor={isEditor}
         onEdit={handleEdit}
         onDeleteSuccess={handleDeleteSuccess}
       />

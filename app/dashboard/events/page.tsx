@@ -1,7 +1,7 @@
 import { MemberListProvider } from "@/context/MemberListContext";
 import EventsList from "@/components/EventsList";
 import MemberDetailModal from "@/components/modal/MemberDetailModal";
-import { getSupabase } from "@/utils/supabase/queries";
+import { getSupabase, getProfile } from "@/utils/supabase/queries";
 
 export const metadata = {
   title: "Sự kiện gia phả",
@@ -9,6 +9,9 @@ export const metadata = {
 
 export default async function EventsPage() {
   const supabase = await getSupabase();
+  const profile = await getProfile();
+  const isEditor = profile?.role === "editor" || profile?.role === "admin";
+  const readOnly = !isEditor;
 
   const [personsRes, customEventsRes] = await Promise.all([
     supabase
@@ -38,6 +41,7 @@ export default async function EventsPage() {
           <EventsList
             persons={persons ?? []}
             customEvents={customEvents ?? []}
+            readOnly={readOnly}
           />
         </main>
       </div>
