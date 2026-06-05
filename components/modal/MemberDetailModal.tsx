@@ -1,7 +1,9 @@
 "use client";
 
-import MemberDetailContent from "@/context/MemberDetailContent";
-import MemberForm from "@/components/MemberForm";
+import dynamic from "next/dynamic";
+
+const MemberDetailContent = dynamic(() => import("@/context/MemberDetailContent"), { ssr: false });
+const MemberForm = dynamic(() => import("@/components/MemberForm"), { ssr: false });
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Edit2, ExternalLink, Loader2, UserCheck, X } from "lucide-react";
@@ -380,11 +382,7 @@ export default function MemberDetailModal() {
                     Chỉnh sửa thành viên
                   </h2>
                   <MemberForm
-                    initialData={
-                      formInitialData as Parameters<
-                        typeof MemberForm
-                      >[0]["initialData"]
-                    }
+                    initialData={formInitialData as Person}
                     isEditing={true}
                     canEditPrivate={canEdit}
                     onSuccess={handleEditSuccess}

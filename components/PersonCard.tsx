@@ -43,8 +43,8 @@ export default function PersonCard({ person }: PersonCardProps) {
               <Image
                 src={person.avatar_url}
                 alt={person.full_name}
-                width={32}
-                height={32}
+                width={64}
+                height={64}
                 className="h-full w-full object-cover"
               />
             ) : (

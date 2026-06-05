@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { compressImage } from "@/utils/imageCompressor";
 
-interface MemberFormProps {
+export interface MemberFormProps {
   initialData?: Person;
   isEditing?: boolean;
   canEditPrivate?: boolean;
