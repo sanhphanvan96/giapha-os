@@ -114,24 +114,22 @@ describe("linkMyPerson — RPC routing", () => {
 // ── 3. updateMyAvatar — own-row write only ────────────────────────────────────
 
 describe("updateMyAvatar — own-row write only", () => {
-  it("calls profiles.update filtered by getUser().id, not a passed-in userId", async () => {
+  it("calls rpc update_my_avatar with new_avatar_url, not a direct table update", async () => {
     const { updateMyAvatar } = await import("./user");
     await updateMyAvatar("https://example.com/avatar.jpg");
 
-    const call = updateCalls.find((c) => c.table === "profiles");
+    const call = rpcCalls.find((c) => c.name === "update_my_avatar");
     expect(call).toBeDefined();
-    // eq filter must use the uid from getUser(), never a param
-    expect(call?.eq).toEqual({ column: "id", value: FAKE_USER_ID });
-    expect(call?.values).toMatchObject({ avatar_url: "https://example.com/avatar.jpg" });
+    expect(call?.params).toEqual({ new_avatar_url: "https://example.com/avatar.jpg" });
   });
 
-  it("supports null to clear avatar (avatar_url = null)", async () => {
+  it("supports null to clear avatar (new_avatar_url = null)", async () => {
     const { updateMyAvatar } = await import("./user");
     await updateMyAvatar(null);
 
-    const call = updateCalls.find((c) => c.table === "profiles");
-    expect(call?.values).toMatchObject({ avatar_url: null });
-    expect(call?.eq.value).toBe(FAKE_USER_ID);
+    const call = rpcCalls.find((c) => c.name === "update_my_avatar");
+    expect(call).toBeDefined();
+    expect(call?.params).toEqual({ new_avatar_url: null });
   });
 });
 

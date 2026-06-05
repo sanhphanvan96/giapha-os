@@ -1,11 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Filter } from "lucide-react";
+import { Filter, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMemberListView } from "@/context/MemberListContext";
 import ExportButton from "./ExportButton";
+import ShareTreeModal from "./modal/ShareTreeModal";
 
 export interface BaseToolbarProps {
   hideDaughtersInLaw: boolean;
@@ -50,6 +51,7 @@ export default function BaseToolbar({
 }: BaseToolbarProps) {
   const { showAvatar, setShowAvatar, showNameOnly, setShowNameOnly } = useMemberListView();
   const [showFilters, setShowFilters] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -236,6 +238,23 @@ export default function BaseToolbar({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Share Button */}
+      {canEdit && (
+        <>
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="flex items-center justify-center size-10 bg-white/80 text-stone-600 border border-stone-200/60 rounded-full hover:bg-white hover:text-stone-900 hover:shadow-md backdrop-blur-md transition-all duration-300"
+            title="Chia sẻ cây gia phả"
+          >
+            <Share2 className="size-4" />
+          </button>
+          <ShareTreeModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+          />
+        </>
+      )}
 
       {/* Export Button */}
       {canEdit && <ExportButton />}

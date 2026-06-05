@@ -68,6 +68,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
       initialRootId={finalRootId}
       initialShowAvatar={initialShowAvatar}
       initialViewAsPersonId={profile?.person_id ?? null}
+      persons={persons}
     >
       <ViewToggle />
       <MembersViews

@@ -20,6 +20,7 @@ export default function MemberDetailModal() {
     setShowCreateMember,
     setViewAsPersonId,
     setView,
+    persons = [],
   } = useMemberListView();
   const { isEditor: canEdit, supabase, profile } = useUser();
   const router = useRouter();
@@ -58,7 +59,16 @@ export default function MemberDetailModal() {
       setLoading(true);
       setError(null);
       try {
-        // 1. Fetch Person Public Data
+        // 1. Tìm trong context persons trước (giúp tải ngay lập tức và tránh lỗi RLS cho khách)
+        const localPerson = persons.find((p) => p.id === id);
+        if (localPerson) {
+          setPerson(localPerson);
+          setPrivateData(null);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Tải dữ liệu công khai từ Supabase (fallback)
         const { data: personData, error: personError } = await supabase
           .from("persons")
           .select("*")
@@ -70,7 +80,7 @@ export default function MemberDetailModal() {
         }
         setPerson(personData);
 
-        // 2. Fetch Private Data if Admin or Editor
+        // 3. Tải thông tin riêng tư nếu là Admin hoặc Editor
         if (canEdit) {
           const { data: privData } = await supabase
             .from("person_details_private")
@@ -89,7 +99,7 @@ export default function MemberDetailModal() {
         setLoading(false);
       }
     },
-    [canEdit, supabase],
+    [canEdit, supabase, persons],
   );
 
   // Sync state with URL parameter or create mode
@@ -236,26 +246,28 @@ export default function MemberDetailModal() {
                       <span className="hidden sm:inline">Xem với tư cách</span>
                     </button>
                     {/* "Đây là tôi" / "Bỏ liên kết" */}
-                    {profile?.person_id === person.id ? (
-                      <button
-                        onClick={() => handleLinkPerson(null)}
-                        disabled={isLinking}
-                        className="btn-amber text-sm opacity-80"
-                        title="Bỏ liên kết tài khoản với người này"
-                      >
-                        <UserCheck className="size-4" />
-                        <span className="hidden sm:inline">Bỏ liên kết</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleLinkPerson(person.id)}
-                        disabled={isLinking}
-                        className="btn-amber text-sm"
-                        title="Đánh dấu đây là tôi"
-                      >
-                        <UserCheck className="size-4" />
-                        <span className="hidden sm:inline">Đây là tôi</span>
-                      </button>
+                    {profile && (
+                      profile.person_id === person.id ? (
+                        <button
+                          onClick={() => handleLinkPerson(null)}
+                          disabled={isLinking}
+                          className="btn-amber text-sm opacity-80"
+                          title="Bỏ liên kết tài khoản với người này"
+                        >
+                          <UserCheck className="size-4" />
+                          <span className="hidden sm:inline">Bỏ liên kết</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleLinkPerson(person.id)}
+                          disabled={isLinking}
+                          className="btn-amber text-sm"
+                          title="Đánh dấu đây là tôi"
+                        >
+                          <UserCheck className="size-4" />
+                          <span className="hidden sm:inline">Đây là tôi</span>
+                        </button>
+                      )
                     )}
                   </>
                 )

@@ -1,6 +1,7 @@
 "use client";
 
 import { ViewMode } from "@/components/ViewToggle";
+import { Person } from "@/types";
 import { useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -36,6 +37,7 @@ interface MemberListViewState {
   setAutoCollapseLevel: (val: number) => void;
   viewAsPersonId: string | null;
   setViewAsPersonId: (id: string | null) => void;
+  persons?: Person[];
 }
 
 export const MemberListContext = createContext<MemberListViewState | undefined>(
@@ -48,6 +50,7 @@ export function MemberListProvider({
   initialRootId,
   initialShowAvatar,
   initialViewAsPersonId,
+  persons = [],
 }: {
   children: React.ReactNode;
   initialView?: ViewMode;
@@ -55,6 +58,7 @@ export function MemberListProvider({
   initialShowAvatar?: boolean;
   /** Auto-select this person as the view-as ego when view=tree and URL has no viewAs param */
   initialViewAsPersonId?: string | null;
+  persons?: Person[];
 }) {
   const searchParams = useSearchParams();
 
@@ -230,6 +234,7 @@ export function MemberListProvider({
         setAutoCollapseLevel,
         viewAsPersonId,
         setViewAsPersonId,
+        persons,
       }}
     >
       {children}
