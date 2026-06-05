@@ -192,16 +192,26 @@ export default function ProfileForm({
           Ảnh đại diện
         </h2>
         <div className="flex items-center gap-5">
-          <div className="size-20 rounded-full overflow-hidden bg-gradient-to-br from-amber-200 to-amber-100 text-amber-800 flex items-center justify-center font-bold text-2xl shadow-sm ring-2 ring-amber-300/50 shrink-0">
+          <div
+            onClick={() => avatarInputRef.current?.click()}
+            className="group/avatar relative size-20 rounded-full overflow-hidden bg-gradient-to-br from-amber-200 to-amber-100 text-amber-800 flex items-center justify-center font-bold text-2xl shadow-sm ring-2 ring-amber-300/50 shrink-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-98"
+          >
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt="Avatar"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover/avatar:scale-105 transition-transform duration-300"
               />
             ) : (
-              <span>{email.charAt(0).toUpperCase()}</span>
+              <span className="group-hover/avatar:scale-105 transition-transform duration-300">
+                {email.charAt(0).toUpperCase()}
+              </span>
             )}
+            {/* Overlay on hover */}
+            <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center transition-opacity duration-300">
+              <Camera className="size-5 text-white mb-0.5" />
+              <span className="text-[10px] text-white/95 font-medium select-none">Tải ảnh</span>
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <input

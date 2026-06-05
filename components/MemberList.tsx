@@ -5,6 +5,7 @@ import { Person, Relationship } from "@/types";
 import { ArrowUpDown, Filter, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMemberListView } from "@/context/MemberListContext";
+import { removeDiacritics } from "@/utils/stringHelpers";
 
 export default function MemberList({
   initialPersons,
@@ -22,11 +23,11 @@ export default function MemberList({
   const [filterOption, setFilterOption] = useState("all");
 
   const filteredPersons = useMemo(() => {
+    const cleanSearch = removeDiacritics(searchTerm);
     return initialPersons.filter((person) => {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch =
-        person.full_name.toLowerCase().includes(term) ||
-        (person.other_names?.toLowerCase().includes(term) ?? false);
+      const nameClean = removeDiacritics(person.full_name);
+      const aliasClean = person.other_names ? removeDiacritics(person.other_names) : "";
+      const matchesSearch = nameClean.includes(cleanSearch) || aliasClean.includes(cleanSearch);
 
       let matchesFilter = true;
       switch (filterOption) {

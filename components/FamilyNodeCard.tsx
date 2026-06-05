@@ -32,18 +32,23 @@ export default function FamilyNodeCard({
     <div
       onClick={onClickCard}
       className={`
-        group py-2 px-1 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 rounded-3xl relative h-full
+        group pt-2 pb-6 px-1 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 rounded-3xl relative h-full
         ${isDeceased ? "grayscale-[0.4] opacity-80" : ""}
         ${showAvatar ? "w-20 sm:w-24 md:w-28 bg-surface/70 backdrop-blur-xl hover:shadow-soft-hover" : "px-3"}
-        ${isEgo ? "ring-2 ring-amber-400 ring-offset-1" : ""}
       `}
     >
       {/* 1. Avatar */}
       {showAvatar && (
         <div className="relative z-10 mb-1.5 sm:mb-2">
+          {isEgo && (
+            <>
+              <div className="absolute inset-0 rounded-full border-[3px] border-[#36B37E] shadow-[0_0_12px_rgba(54,179,126,0.8)] animate-ripple-gentle z-0" />
+              <div className="absolute inset-0 rounded-full border-[3px] border-[#36B37E]/60 shadow-[0_0_12px_rgba(54,179,126,0.5)] animate-ripple-gentle [animation-delay:1.25s] z-0" />
+            </>
+          )}
           <div
             className={`
-              h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center text-[10px] sm:text-xs md:text-sm text-white overflow-hidden shrink-0 shadow-lg ring-2 ring-white transition-transform duration-300 group-hover:scale-105
+              relative z-10 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center text-[10px] sm:text-xs md:text-sm text-white overflow-hidden shrink-0 shadow-lg ring-2 ring-white transition-transform duration-300 group-hover:scale-105
               ${getAvatarBg(person.gender)}
             `}
           >
@@ -107,7 +112,7 @@ export default function FamilyNodeCard({
 
         {/* 3. Kinship label pill (when "Xem với tư cách là" is active) */}
         {isEgo && (
-          <span className="inline-block max-w-full truncate rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight text-white" title="Tôi">
+          <span className="inline-block max-w-full truncate rounded-full bg-[#36B37E] px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight text-white" title="Tôi">
             Tôi
           </span>
         )}

@@ -37,7 +37,7 @@ export default async function DashboardLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/" className="group flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-800 group-hover:text-amber-700 transition-colors">
+                <h1 className="text-xl sm:text-2xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
                   {config.siteName}
                 </h1>
               </Link>

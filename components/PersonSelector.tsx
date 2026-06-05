@@ -4,7 +4,8 @@ import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Database, Search } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { removeDiacritics } from "@/utils/stringHelpers";
 import DefaultAvatar from "./DefaultAvatar";
 import { FemaleIcon, MaleIcon } from "./GenderIcons";
 
@@ -48,13 +49,21 @@ export default function PersonSelector({
 
   const currentPerson = persons.find((p) => p.id === selectedId);
 
-  const filteredPersons = persons
-    .filter((p) => {
-      const searchStr =
-        `${p.full_name} ${p.other_names ?? ""} ${p.birth_year || ""}`.toLowerCase();
-      return searchStr.includes(searchTerm.toLowerCase());
-    })
-    .slice(0, 20);
+  const filteredPersons = useMemo(() => {
+    const cleanSearch = removeDiacritics(searchTerm);
+    return persons
+      .filter((p) => {
+        const nameClean = removeDiacritics(p.full_name);
+        const aliasClean = p.other_names ? removeDiacritics(p.other_names) : "";
+        const birthClean = p.birth_year ? String(p.birth_year) : "";
+        return (
+          nameClean.includes(cleanSearch) ||
+          aliasClean.includes(cleanSearch) ||
+          birthClean.includes(cleanSearch)
+        );
+      })
+      .slice(0, 20);
+  }, [persons, searchTerm]);
 
   const handleSelect = (personId: string | null) => {
     onSelect(personId);

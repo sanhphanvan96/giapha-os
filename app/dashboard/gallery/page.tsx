@@ -2,7 +2,7 @@ import { getSupabase } from "@/utils/supabase/queries";
 import GalleryClient from "@/components/GalleryClient";
 
 export const metadata = {
-  title: "Phòng trưng bày | Gia Phả OS",
+  title: "Album ảnh | Gia Phả OS",
   description: "Lưu giữ và chia sẻ hình ảnh, kỷ niệm dòng họ",
 };
 
