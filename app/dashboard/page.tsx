@@ -73,15 +73,15 @@ export default async function DashboardLaunchpad() {
       borderColor: "border-amber-200/60",
       hoverColor: "hover:border-amber-400 hover:shadow-amber-100",
     },
-    // {
-    //   title: "Sự kiện",
-    //   description: "Quản lý ngày giỗ, họp họ và các dịp quan trọng",
-    //   icon: <CalendarClock className="size-8 text-emerald-600" />,
-    //   href: "/dashboard/events",
-    //   bgColor: "bg-emerald-50",
-    //   borderColor: "border-emerald-200/60",
-    //   hoverColor: "hover:border-emerald-400 hover:shadow-emerald-100",
-    // },
+    {
+      title: "Phòng trưng bày",
+      description: "Lưu giữ và chia sẻ hình ảnh, kỷ niệm dòng họ",
+      icon: <ImageIcon className="size-8 text-pink-600" />,
+      href: "/dashboard/gallery",
+      bgColor: "bg-pink-50",
+      borderColor: "border-pink-200/60",
+      hoverColor: "hover:border-pink-400 hover:shadow-pink-100",
+    },
     {
       title: "Tra cứu danh xưng",
       description: "Hệ thống gọi tên họ hàng chuẩn xác",
@@ -99,15 +99,6 @@ export default async function DashboardLaunchpad() {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200/60",
       hoverColor: "hover:border-purple-400 hover:shadow-purple-100",
-    },
-    {
-      title: "Phòng trưng bày",
-      description: "Lưu giữ và chia sẻ hình ảnh, kỷ niệm dòng họ",
-      icon: <ImageIcon className="size-8 text-pink-600" />,
-      href: "/dashboard/gallery",
-      bgColor: "bg-pink-50",
-      borderColor: "border-pink-200/60",
-      hoverColor: "hover:border-pink-400 hover:shadow-pink-100",
     },
   ];
 
