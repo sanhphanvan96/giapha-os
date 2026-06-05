@@ -30,8 +30,6 @@ export default function MemberDetailModal() {
   const [formDirty, setFormDirty] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
 
-  console.log("MemberDetailModal render:", { memberId, isEditing, formDirty, formLoading });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

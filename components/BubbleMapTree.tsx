@@ -2,6 +2,7 @@
 
 import { Person, Relationship } from "@/types";
 import { buildAdjacencyLists, getFilteredTreeData } from "@/utils/treeHelpers";
+import { optimizedAvatarHref } from "@/utils/imageUrl";
 import * as d3 from "d3";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AVATAR_VERSION } from "./DefaultAvatar";
@@ -282,10 +283,11 @@ export default function BubbleMapTree({
               .attr("preserveAspectRatio", "xMidYMid slice")
               .attr(
                 "href",
-                person.avatar_url ||
-                (person.gender === "male"
-                  ? `/avatar/${AVATAR_VERSION}/male.svg`
-                  : `/avatar/${AVATAR_VERSION}/female.svg`),
+                person.avatar_url
+                  ? optimizedAvatarHref(person.avatar_url, 128)
+                  : person.gender === "male"
+                    ? `/avatar/${AVATAR_VERSION}/male.svg`
+                    : `/avatar/${AVATAR_VERSION}/female.svg`,
               );
           });
         });

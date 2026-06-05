@@ -3,7 +3,7 @@
 import { ViewMode } from "@/components/ViewToggle";
 import { Person } from "@/types";
 import { useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 interface MemberListViewState {
   memberModalId: string | null;
@@ -139,8 +139,8 @@ export function MemberListProvider({
     syncFromURL();
   }, [searchParams]);
 
-  // Sync to URL silently
-  const updateModalId = (id: string | null) => {
+  // Sync to URL silently — stable callbacks to avoid invalidating useMemo below
+  const updateModalId = useCallback((id: string | null) => {
     setMemberModalId(id);
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
@@ -151,9 +151,9 @@ export function MemberListProvider({
       }
       window.history.replaceState(null, "", newUrl.toString());
     }
-  };
+  }, []);
 
-  const updateAvatar = (show: boolean) => {
+  const updateAvatar = useCallback((show: boolean) => {
     setShowAvatar(show);
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
@@ -164,18 +164,18 @@ export function MemberListProvider({
       }
       window.history.replaceState(null, "", newUrl.toString());
     }
-  };
+  }, []);
 
-  const setView = (v: ViewMode) => {
+  const setView = useCallback((v: ViewMode) => {
     setViewState(v);
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("view", v);
       window.history.replaceState(null, "", newUrl.toString());
     }
-  };
+  }, []);
 
-  const setRootId = (id: string | null) => {
+  const setRootId = useCallback((id: string | null) => {
     setRootIdState(id);
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
@@ -186,9 +186,9 @@ export function MemberListProvider({
       }
       window.history.replaceState(null, "", newUrl.toString());
     }
-  };
+  }, []);
 
-  const setViewAsPersonId = (id: string | null) => {
+  const setViewAsPersonId = useCallback((id: string | null) => {
     setViewAsPersonIdState(id);
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
@@ -199,44 +199,65 @@ export function MemberListProvider({
       }
       window.history.replaceState(null, "", newUrl.toString());
     }
-  };
+  }, []);
+
+  // Memoize the context value so consumers only re-render when relevant state changes
+  const contextValue = useMemo(
+    () => ({
+      memberModalId,
+      setMemberModalId: updateModalId,
+      showCreateMember,
+      setShowCreateMember,
+      showAvatar,
+      setShowAvatar: updateAvatar,
+      showNameOnly,
+      setShowNameOnly,
+      view,
+      setView,
+      rootId,
+      setRootId,
+      hideDaughtersInLaw,
+      setHideDaughtersInLaw,
+      hideSonsInLaw,
+      setHideSonsInLaw,
+      hideDaughters,
+      setHideDaughters,
+      hideSons,
+      setHideSons,
+      hideMales,
+      setHideMales,
+      hideFemales,
+      setHideFemales,
+      hideExpandButtons,
+      setHideExpandButtons,
+      autoCollapseLevel,
+      setAutoCollapseLevel,
+      viewAsPersonId,
+      setViewAsPersonId,
+      persons,
+    }),
+    [
+      memberModalId, updateModalId,
+      showCreateMember, setShowCreateMember,
+      showAvatar, updateAvatar,
+      showNameOnly, setShowNameOnly,
+      view, setView,
+      rootId, setRootId,
+      hideDaughtersInLaw, setHideDaughtersInLaw,
+      hideSonsInLaw, setHideSonsInLaw,
+      hideDaughters, setHideDaughters,
+      hideSons, setHideSons,
+      hideMales, setHideMales,
+      hideFemales, setHideFemales,
+      hideExpandButtons, setHideExpandButtons,
+      autoCollapseLevel, setAutoCollapseLevel,
+      viewAsPersonId, setViewAsPersonId,
+      persons,
+    ],
+  );
 
   return (
-    <MemberListContext.Provider
-      value={{
-        memberModalId,
-        setMemberModalId: updateModalId,
-        showCreateMember,
-        setShowCreateMember,
-        showAvatar,
-        setShowAvatar: updateAvatar,
-        showNameOnly,
-        setShowNameOnly,
-        view,
-        setView,
-        rootId,
-        setRootId,
-        hideDaughtersInLaw,
-        setHideDaughtersInLaw,
-        hideSonsInLaw,
-        setHideSonsInLaw,
-        hideDaughters,
-        setHideDaughters,
-        hideSons,
-        setHideSons,
-        hideMales,
-        setHideMales,
-        hideFemales,
-        setHideFemales,
-        hideExpandButtons,
-        setHideExpandButtons,
-        autoCollapseLevel,
-        setAutoCollapseLevel,
-        viewAsPersonId,
-        setViewAsPersonId,
-        persons,
-      }}
-    >
+    <MemberListContext.Provider value={contextValue}>
       {children}
     </MemberListContext.Provider>
   );

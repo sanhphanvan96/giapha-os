@@ -85,7 +85,10 @@ export default function ProfileForm({
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, compressedFile, { upsert: true });
+        .upload(filePath, compressedFile, {
+          upsert: true,
+          cacheControl: "31536000",
+        });
 
       if (uploadError) throw uploadError;
 

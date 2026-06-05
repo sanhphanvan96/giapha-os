@@ -42,11 +42,16 @@ export default function MembersViews({
   const searchParams = useSearchParams();
   const hasRestored = useRef(false);
 
-  // Prepare map and roots for tree views
-  const { personsMap, roots, defaultRootId } = useMemo(() => {
+  // Build personsMap separately so its identity is stable across rootId changes.
+  // This prevents FamilyTree from recomputing adj + egoLabels whenever the root changes.
+  const personsMap = useMemo(() => {
     const pMap = new Map<string, Person>();
     persons.forEach((p) => pMap.set(p.id, p));
+    return pMap;
+  }, [persons]);
 
+  // Derive roots and defaultRootId (depends on relationships + rootId, but NOT persons shape)
+  const { roots, defaultRootId } = useMemo(() => {
     const childIds = new Set(
       relationships
         .filter(
@@ -58,7 +63,7 @@ export default function MembersViews({
     let finalRootId = rootId;
 
     // If no rootId is provided, fallback to generation 1 or earliest birth year
-    if (!finalRootId || !pMap.has(finalRootId)) {
+    if (!finalRootId || !personsMap.has(finalRootId)) {
       const rootsFallback = persons.filter((p) => !childIds.has(p.id));
       if (rootsFallback.length > 0) {
         const gen1 = rootsFallback.filter((p) => p.generation === 1);
@@ -79,16 +84,15 @@ export default function MembersViews({
     }
 
     let calculatedRoots: Person[] = [];
-    if (finalRootId && pMap.has(finalRootId)) {
-      calculatedRoots = [pMap.get(finalRootId)!];
+    if (finalRootId && personsMap.has(finalRootId)) {
+      calculatedRoots = [personsMap.get(finalRootId)!];
     }
 
     return {
-      personsMap: pMap,
       roots: calculatedRoots,
       defaultRootId: finalRootId,
     };
-  }, [persons, relationships, rootId]);
+  }, [personsMap, relationships, rootId, persons]);
 
   // Sort persons for selectors: generation → birth_order → birth_year (matches Danh sách default)
   const sortedPersonsForSelector = useMemo(() => {

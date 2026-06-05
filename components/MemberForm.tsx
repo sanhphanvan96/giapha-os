@@ -528,7 +528,10 @@ export default function MemberForm({
 
         const { error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(filePath, avatarFile, { upsert: true });
+          .upload(filePath, avatarFile, {
+            upsert: true,
+            cacheControl: "31536000",
+          });
 
         if (uploadError) throw uploadError;
 

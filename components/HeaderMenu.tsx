@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import {
   BarChart2,
   ChevronDown,
@@ -43,9 +44,11 @@ export default function HeaderMenu() {
       >
         <div className="size-8 rounded-full overflow-hidden bg-linear-to-br from-amber-200 to-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-sm ring-1 ring-amber-300/50">
           {profile?.avatar_url ? (
-            <img
+            <Image
               src={profile.avatar_url}
               alt={userEmail ?? ""}
+              width={32}
+              height={32}
               className="w-full h-full object-cover"
             />
           ) : userEmail ? (
