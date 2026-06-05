@@ -13,6 +13,7 @@ import {
   Star,
   Users,
   Image as ImageIcon,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -119,6 +120,15 @@ export default async function DashboardLaunchpad() {
       bgColor: "bg-rose-50",
       borderColor: "border-rose-200/60",
       hoverColor: "hover:border-rose-400 hover:shadow-rose-100",
+    },
+    {
+      title: "Liên kết Chia sẻ",
+      description: "Quản lý các đường link xem gia phả công khai",
+      icon: <Share2 className="size-8 text-amber-600" />,
+      href: "/dashboard/sharing",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200/60",
+      hoverColor: "hover:border-amber-400 hover:shadow-amber-100",
     },
     {
       title: "Thứ tự gia phả",
