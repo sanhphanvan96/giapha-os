@@ -128,6 +128,7 @@ export default function MemberForm({
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initialData?.avatar_url || null,
   );
+  const [avatarToDelete, setAvatarToDelete] = useState<string | null>(null);
 
   const [note, setNote] = useState(initialData?.note || "");
 
@@ -512,6 +513,19 @@ export default function MemberForm({
         const fileName = `${currentPersonId}_${slugName}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        // If there was an old avatar and its filename is different from the new one,
+        // we should delete the old one to avoid leaving an orphaned file in storage.
+        if (initialData?.avatar_url) {
+          try {
+            const oldFileName = initialData.avatar_url.split("?")[0].split("/").pop();
+            if (oldFileName && oldFileName !== fileName) {
+              await supabase.storage.from("avatars").remove([oldFileName]);
+            }
+          } catch (err) {
+            console.error("Failed to clean up old avatar:", err);
+          }
+        }
+
         const { error: uploadError } = await supabase.storage
           .from("avatars")
           .upload(filePath, avatarFile, { upsert: true });
@@ -532,6 +546,18 @@ export default function MemberForm({
           .update({ avatar_url: currentAvatarUrl })
           .eq("id", currentPersonId);
         if (updateAvatarError) throw updateAvatarError;
+      } else if (avatarToDelete) {
+        // If the user deleted the avatar (and didn't upload a new one)
+        try {
+          const { error: removeError } = await supabase.storage
+            .from("avatars")
+            .remove([avatarToDelete]);
+          if (removeError) {
+            console.error("Error removing avatar from storage:", removeError);
+          }
+        } catch (err) {
+          console.error("Failed to delete avatar from storage:", err);
+        }
       }
 
       // 3. Upsert private data (only if admin and currentPersonId exists)
@@ -797,28 +823,20 @@ export default function MemberForm({
                   {avatarPreview && (
                     <button
                       type="button"
-                      onClick={async () => {
-                        // If there is an existing URL from Supabase, try to extract the file path to delete it
+                      onClick={() => {
+                        // If there is an existing URL from Supabase, mark the file to be deleted upon saving
                         if (
                           initialData?.avatar_url &&
                           avatarUrl === initialData.avatar_url
                         ) {
                           try {
-                            // Extract just the filename from the end of the URL
+                            // Extract just the filename from the end of the URL (strip cache buster)
                             const fileName = initialData.avatar_url
+                              .split("?")[0]
                               .split("/")
                               .pop();
                             if (fileName) {
-                              const { error: removeError } =
-                                await supabase.storage
-                                  .from("avatars")
-                                  .remove([fileName]);
-                              if (removeError) {
-                                console.error(
-                                  "Error removing avatar from storage:",
-                                  removeError,
-                                );
-                              }
+                              setAvatarToDelete(fileName);
                             }
                           } catch (err) {
                             console.error(
