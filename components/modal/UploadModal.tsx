@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { X, UploadCloud, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { compressImage } from "@/utils/imageCompressor";
 
 import { GalleryItem } from "@/types";
 
@@ -57,7 +58,7 @@ export default function UploadModal({
     const selected = e.target.files?.[0];
     if (selected) {
       if (selected.size > 10 * 1024 * 1024) {
-        setError("File size must be less than 10MB");
+        setError("Kích thước ảnh phải nhỏ hơn 10MB");
         return;
       }
       setFile(selected);
@@ -75,6 +76,10 @@ export default function UploadModal({
     e.preventDefault();
     const dropped = e.dataTransfer.files?.[0];
     if (dropped && dropped.type.startsWith("image/")) {
+      if (dropped.size > 10 * 1024 * 1024) {
+        setError("Kích thước ảnh phải nhỏ hơn 10MB");
+        return;
+      }
       setFile(dropped);
       setPreview(URL.createObjectURL(dropped));
       setError(null);
@@ -100,7 +105,12 @@ export default function UploadModal({
 
       // 1. Upload to storage (only if new file selected)
       if (file) {
-        const { url, error: uploadError } = await uploadGalleryImage(file);
+        const compressedFile = await compressImage(file, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.85,
+        });
+        const { url, error: uploadError } = await uploadGalleryImage(compressedFile);
         if (uploadError || !url) {
           throw new Error("Lỗi khi tải ảnh lên. Vui lòng thử lại.");
         }
