@@ -51,7 +51,7 @@ Nguyên tắc thiết kế để **cross-user là không thể về mặt cấu 
 
 | File | Thay đổi |
 |------|----------|
-| `docs/migrations/<ts>_add_profile_person_link.sql` | **Mới.** `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS person_id uuid REFERENCES persons(id) ON DELETE SET NULL` + index; `ADD COLUMN IF NOT EXISTS avatar_url text`; tạo RPC `set_my_person`, `admin_set_user_person`; định nghĩa lại `get_admin_users` trả thêm `person_id`, `person_full_name`; sửa type `admin_user_data` tương ứng |
+| `supabase/migrations/20260605115834_add_profile_person_link.sql` | **Mới.** `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS person_id uuid REFERENCES persons(id) ON DELETE SET NULL` + index; `ADD COLUMN IF NOT EXISTS avatar_url text`; tạo RPC `set_my_person`, `admin_set_user_person`; định nghĩa lại `get_admin_users` trả thêm `person_id`, `person_full_name`; sửa type `admin_user_data` tương ứng |
 | `docs/schema.sql` | Thêm `person_id` (+ `avatar_url`) vào CREATE TABLE `profiles`; cập nhật type `admin_user_data` & thân `get_admin_users` cho khớp migration (giữ schema chuẩn đồng bộ) |
 | `types/index.ts` | `Profile` += `person_id: string \| null`; `AdminUserData` += `person_id: string \| null`, `person_full_name: string \| null` |
 | `app/actions/user.ts` | Action mới: `linkMyPerson(personId: string \| null)` (RPC `set_my_person`), `adminSetUserPerson(userId, personId \| null)` (RPC `admin_set_user_person`), `updateMyAvatar(avatarUrl: string \| null)` (ghi trực tiếp `.update` lên profile của chính mình) |

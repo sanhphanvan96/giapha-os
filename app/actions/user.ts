@@ -141,16 +141,15 @@ export async function updateMyEmail(newEmail: string) {
 }
 
 // Update the avatar_url of the currently logged-in user's profile.
-// Uses getUser() to obtain the uid — client never sends a userId param.
+// Uses SECURITY DEFINER RPC to bypass missing UPDATE RLS on profiles table.
 export async function updateMyAvatar(avatarUrl: string | null) {
   const supabase = await getSupabase();
   const user = await getUser();
   if (!user) return { error: "Chưa đăng nhập." };
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ avatar_url: avatarUrl })
-    .eq("id", user.id);
+  const { error } = await supabase.rpc("update_my_avatar", {
+    new_avatar_url: avatarUrl,
+  });
 
   if (error) {
     console.error("Failed to update avatar:", error);
