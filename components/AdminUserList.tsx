@@ -208,10 +208,10 @@ export default function AdminUserList({
         users.map((u) =>
           u.id === userId
             ? {
-                ...u,
-                person_id: personId,
-                person_full_name: person?.full_name ?? null,
-              }
+              ...u,
+              person_id: personId,
+              person_full_name: person?.full_name ?? null,
+            }
             : u,
         ),
       );
@@ -236,13 +236,12 @@ export default function AdminUserList({
             initial={{ opacity: 0, y: -20, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className={`fixed top-1/2 left-1/2 z-100 px-6 py-3 rounded-xl shadow-lg border flex items-center gap-3 min-w-[320px] max-w-[90vw] ${
-              notification.type === "success"
+            className={`fixed top-1/2 left-1/2 z-100 px-6 py-3 rounded-xl shadow-lg border flex items-center gap-3 min-w-[320px] max-w-[90vw] ${notification.type === "success"
                 ? "bg-emerald-50/90 border-emerald-200 text-emerald-800"
                 : notification.type === "error"
                   ? "bg-red-50/90 border-red-200 text-red-800"
                   : "bg-amber-50/90 border-amber-200 text-amber-800"
-            }`}
+              }`}
           >
             {notification.type === "success" && (
               <svg
@@ -353,15 +352,14 @@ export default function AdminUserList({
                   <td className="px-6 py-4">
                     {user.id === currentUserId ? (
                       <span
-                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                          user.role === "admin"
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${user.role === "admin"
                             ? "bg-amber-100 text-amber-800 border border-amber-200"
                             : user.role === "editor"
                               ? "bg-sky-100 text-sky-800 border border-sky-200"
                               : "bg-stone-100 text-stone-600 border border-stone-200"
-                        }`}
+                          }`}
                       >
-                        {user.role}
+                        {user.role === "admin" ? "Admin" : user.role === "editor" ? "Editor" : "Viewer"}
                       </span>
                     ) : (
                       <select
@@ -374,7 +372,7 @@ export default function AdminUserList({
                       >
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>
-                        <option value="member">Member</option>
+                        <option value="member">Viewer</option>
                       </select>
                     )}
                   </td>
@@ -386,15 +384,13 @@ export default function AdminUserList({
                       onClick={() =>
                         handleStatusChange(user.id, !user.is_active)
                       }
-                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
-                        user.is_active
+                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${user.is_active
                           ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                           : "bg-stone-100 text-stone-800 border border-stone-200"
-                      } ${
-                        user.id !== currentUserId
+                        } ${user.id !== currentUserId
                           ? "hover:opacity-80 cursor-pointer"
                           : "opacity-50 cursor-not-allowed"
-                      } disabled:opacity-50`}
+                        } disabled:opacity-50`}
                       title={
                         user.id !== currentUserId
                           ? user.is_active
@@ -530,7 +526,7 @@ export default function AdminUserList({
                     className="w-full px-3 py-2 sm:py-2.5 bg-white text-stone-900 placeholder-stone-400 border border-stone-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                     defaultValue="member"
                   >
-                    <option value="member">Thành viên (Member)</option>
+                    <option value="member">Người xem (Viewer)</option>
                     <option value="editor">Biên tập (Editor)</option>
                     <option value="admin">Quản trị viên (Admin)</option>
                   </select>

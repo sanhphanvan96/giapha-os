@@ -14,6 +14,7 @@ export default async function EditMemberPage({ params }: PageProps) {
   const profile = await getProfile();
   const isAdmin = profile?.role === "admin";
   const isEditor = profile?.role === "editor";
+  const canEditPrivate = isAdmin || isEditor;
   if (!isAdmin && !isEditor) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -44,7 +45,7 @@ export default async function EditMemberPage({ params }: PageProps) {
 
   // Fetch Private Data
   let privateData = null;
-  if (isAdmin) {
+  if (canEditPrivate) {
     const { data } = await supabase
       .from("person_details_private")
       .select("*")
@@ -53,7 +54,7 @@ export default async function EditMemberPage({ params }: PageProps) {
     privateData = data;
   }
 
-  const initialData = isAdmin  ? { ...person, ...privateData }  : { ...person };
+  const initialData = canEditPrivate ? { ...person, ...privateData } : { ...person };
 
   return (
     <div className="flex-1 w-full relative flex flex-col pb-8">
@@ -75,7 +76,7 @@ export default async function EditMemberPage({ params }: PageProps) {
       </div>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 w-full flex-1">
-        <MemberForm initialData={initialData} isEditing={true} isAdmin={isAdmin} />
+        <MemberForm initialData={initialData} isEditing={true} canEditPrivate={canEditPrivate} />
       </main>
     </div>
   );

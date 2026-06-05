@@ -47,9 +47,9 @@ export default async function AdminUsersPage() {
               <span className="text-xs text-stone-400">Quản trị viên</span>
             </div>
             <ul className="space-y-1.5 text-sm text-stone-600">
-              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Toàn quyền thêm, sửa, xóa thành viên</li>
-              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Quản lý tài khoản &amp; phân quyền</li>
-              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Import / Export dữ liệu</li>
+              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Toàn quyền quản trị gia phả</li>
+              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Quản lý tài khoản đăng nhập &amp; phân quyền</li>
+              <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>Import / Export toàn bộ dữ liệu</li>
             </ul>
           </div>
 
@@ -62,23 +62,24 @@ export default async function AdminUsersPage() {
               <span className="text-xs text-stone-400">Biên tập viên</span>
             </div>
             <ul className="space-y-1.5 text-sm text-stone-600">
-              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Thêm, sửa, xóa thành viên</li>
+              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Thêm, sửa, xóa người trong cây gia phả</li>
               <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Quản lý quan hệ trong gia phả</li>
-              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Import / Export dữ liệu</li>
+              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Không Import/Export, không tạo tài khoản đăng nhập</li>
             </ul>
           </div>
 
-          {/* Member */}
+          {/* Viewer */}
           <div className="bg-white rounded-2xl border border-stone-200 p-4">
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-500 border border-stone-200">
-                Member
+                Viewer
               </span>
-              <span className="text-xs text-stone-400">Thành viên</span>
+              <span className="text-xs text-stone-400">Người xem</span>
             </div>
             <ul className="space-y-1.5 text-sm text-stone-600">
               <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Xem cây gia phả &amp; sơ đồ</li>
-              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Xem hồ sơ từng thành viên</li>
+              <li className="flex items-start gap-2"><span className="text-stone-400 mt-0.5">•</span>Xem hồ sơ công khai của người trong gia phả</li>
+              <li className="flex items-start gap-2"><span className="text-stone-300 mt-0.5">•</span><span className="text-stone-400">Không xem được thông tin riêng tư</span></li>
               <li className="flex items-start gap-2"><span className="text-stone-300 mt-0.5">•</span><span className="text-stone-400">Không chỉnh sửa được</span></li>
             </ul>
           </div>

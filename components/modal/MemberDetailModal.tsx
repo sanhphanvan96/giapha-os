@@ -21,7 +21,7 @@ export default function MemberDetailModal() {
     setViewAsPersonId,
     setView,
   } = useMemberListView();
-  const { isAdmin, isEditor: canEdit, supabase, profile } = useUser();
+  const { isEditor: canEdit, supabase, profile } = useUser();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -70,8 +70,8 @@ export default function MemberDetailModal() {
         }
         setPerson(personData);
 
-        // 2. Fetch Private Data if Admin
-        if (isAdmin) {
+        // 2. Fetch Private Data if Admin or Editor
+        if (canEdit) {
           const { data: privData } = await supabase
             .from("person_details_private")
             .select("*")
@@ -89,7 +89,7 @@ export default function MemberDetailModal() {
         setLoading(false);
       }
     },
-    [isAdmin, supabase],
+    [canEdit, supabase],
   );
 
   // Sync state with URL parameter or create mode
@@ -322,7 +322,7 @@ export default function MemberDetailModal() {
                       >[0]["initialData"]
                     }
                     isEditing={true}
-                    isAdmin={isAdmin}
+                    canEditPrivate={canEdit}
                     onSuccess={handleEditSuccess}
                     onCancel={() => setIsEditing(false)}
                   />
@@ -341,7 +341,7 @@ export default function MemberDetailModal() {
                     Thêm thành viên mới
                   </h2>
                   <MemberForm
-                    isAdmin={isAdmin}
+                    canEditPrivate={canEdit}
                     onSuccess={handleCreateSuccess}
                     onCancel={closeModal}
                   />
@@ -359,7 +359,7 @@ export default function MemberDetailModal() {
                   <MemberDetailContent
                     person={person}
                     privateData={privateData}
-                    isAdmin={isAdmin}
+                    isAdmin={canEdit}
                     canEdit={canEdit}
                   />
                 </motion.div>
