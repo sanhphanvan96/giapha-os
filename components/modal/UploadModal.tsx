@@ -216,7 +216,7 @@ export default function UploadModal({
               <h2 className="text-xl font-serif font-bold text-stone-800 mb-6">
                 {initialData
                   ? "Chỉnh sửa hình ảnh"
-                  : "Thêm vào Phòng trưng bày"}
+                  : "Thêm vào Album ảnh"}
               </h2>
 
               <form

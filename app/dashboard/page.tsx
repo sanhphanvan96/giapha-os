@@ -83,7 +83,7 @@ export default async function DashboardLaunchpad() {
       arrowHoverClass: "group-hover:text-amber-700 group-hover:bg-amber-50/60 group-hover:border-amber-200/60",
     },
     {
-      title: "Phòng trưng bày",
+      title: "Album ảnh",
       description: "Lưu giữ và chia sẻ hình ảnh, kỷ niệm dòng họ",
       icon: <ImageIcon className="size-6 text-pink-600 transition-transform duration-300 group-hover:scale-110" />,
       href: "/dashboard/gallery",
@@ -228,10 +228,10 @@ export default async function DashboardLaunchpad() {
                 </div>
                 <div>
                   <span className="text-xs text-amber-800 font-bold uppercase tracking-wider block flex items-center gap-1">
-                    Phòng trưng bày
+                    Album ảnh
                     <ArrowRight className="size-3 group-hover/gallery:translate-x-0.5 transition-transform" />
                   </span>
-                  <span className="text-sm font-bold text-stone-850 mt-1 block">Hình ảnh dòng họ</span>
+                  <span className="text-sm font-bold text-stone-850 mt-1 block">Hình ảnh gia đình</span>
                   <span className="text-[10px] text-stone-500 font-medium block">Lưu giữ khoảnh khắc</span>
                 </div>
               </Link>
@@ -243,44 +243,28 @@ export default async function DashboardLaunchpad() {
       {/* Calendar & Events Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
         {/* Left: Lunar/Solar Calendar Widget */}
-        <div className="lg:col-span-1 bg-white rounded-3xl border border-stone-200/60 shadow-soft p-6 flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1 hover:shadow-soft-hover hover:border-amber-300/80 transition-all duration-300">
+        <div className="lg:col-span-1 bg-white rounded-3xl border border-stone-200/60 shadow-soft p-5 flex flex-col justify-center relative overflow-hidden group hover:-translate-y-0.5 hover:shadow-soft-hover hover:border-amber-300/80 transition-all duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
-          <div>
-            <div className="flex items-center justify-center sm:justify-between mb-5">
-              <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/50 px-3 py-1 rounded-full uppercase tracking-wider">
-                Lịch Âm Dương
-              </span>
-              <CalendarDays className="size-5 text-stone-400 group-hover:scale-110 group-hover:text-amber-700 transition-all duration-300 hidden sm:block" />
-            </div>
 
-            {/* Date Details */}
-            <div className="flex flex-col items-center sm:items-start gap-4 mt-2">
-              <div className="size-12 rounded-2xl bg-amber-50/70 border border-amber-100/50 flex items-center justify-center text-amber-700 shadow-xs group-hover:scale-105 transition-all duration-300">
-                <CalendarDays className="size-6" />
-              </div>
-              <div className="text-center sm:text-left">
-                <p className="text-xs font-bold text-amber-700 uppercase tracking-widest leading-none">
-                  {dayOfWeekStr}
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold font-serif text-stone-900 tracking-tight mt-2.5 leading-snug">
-                  Ngày {solarDay} {solarMonthStr}
-                </h3>
-              </div>
-            </div>
+          <div className="flex items-center justify-center lg:justify-start gap-2 mb-3.5 relative z-10">
+            <CalendarDays className="size-4 text-amber-700" />
+            <span className="text-xs font-bold text-stone-700 uppercase tracking-wider">
+              Lịch Âm Dương
+            </span>
           </div>
 
-          {/* Lunar Section below */}
-          <div className="pt-5 mt-5 border-t border-stone-100 space-y-3 flex flex-col items-center sm:items-start">
-            <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800 shadow-xs">
-              <span className="text-xs font-bold">🌿</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Âm lịch</span>
-            </div>
-            <div className="pl-0 sm:pl-1.5 text-center sm:text-left">
-              <p className="text-base font-extrabold text-stone-900 group-hover:text-amber-900 transition-colors duration-300">
-                Ngày {lunar.lunarDayStr} tháng {lunar.lunarMonth}
+          <div className="space-y-3 relative z-10 text-center lg:text-left">
+            <div>
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Dương lịch</p>
+              <p className="text-base font-bold text-stone-900 mt-0.5">
+                {dayOfWeekStr}, Ngày {solarDay} {solarMonthStr}
               </p>
-              <p className="text-xs text-stone-500 font-semibold mt-1">
-                Năm {lunar.lunarYear}
+            </div>
+
+            <div className="pt-3 border-t border-stone-100">
+              <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Âm lịch</p>
+              <p className="text-base font-bold text-stone-900 mt-0.5">
+                Ngày {lunar.lunarDayStr} ({lunar.lunarYear})
               </p>
             </div>
           </div>
