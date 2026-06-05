@@ -90,6 +90,23 @@ export default function MembersViews({
     };
   }, [persons, relationships, rootId]);
 
+  // Sort persons for selectors: generation → birth_order → birth_year (matches Danh sách default)
+  const sortedPersonsForSelector = useMemo(() => {
+    return [...persons].sort((a, b) => {
+      const genA = a.generation ?? Infinity;
+      const genB = b.generation ?? Infinity;
+      if (genA !== genB) return genA - genB;
+
+      const boA = a.birth_order ?? Infinity;
+      const boB = b.birth_order ?? Infinity;
+      if (boA !== boB) return boA - boB;
+
+      const byA = a.birth_year ?? Infinity;
+      const byB = b.birth_year ?? Infinity;
+      return byA - byB;
+    });
+  }, [persons]);
+
   const activeRootId = rootId || defaultRootId;
 
   // Khôi phục lựa chọn từ localStorage
@@ -139,8 +156,8 @@ export default function MembersViews({
         {currentView !== "list" && persons.length > 0 && activeRootId && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 w-full flex flex-col sm:flex-row flex-wrap items-center sm:justify-between gap-4 relative z-20">
             <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full sm:w-auto">
-              <RootSelector persons={persons} currentRootId={rootId} />
-              {currentView === "tree" && <ViewAsSelector persons={persons} />}
+              <RootSelector persons={sortedPersonsForSelector} currentRootId={rootId} />
+              {currentView === "tree" && <ViewAsSelector persons={sortedPersonsForSelector} />}
             </div>
             <div
               id="tree-toolbar-portal"
