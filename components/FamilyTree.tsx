@@ -252,7 +252,7 @@ export default function FamilyTree({
         >
           {/* Main Person & Spouses Row */}
           <div
-            className={`flex z-10 items-stretch h-full pb-4${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
+            className={`flex z-10 items-stretch h-full${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
           >
             <FamilyNodeCard
               person={data.person}

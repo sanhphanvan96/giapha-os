@@ -40,7 +40,7 @@ export default function Footer({
         </a>
         <span className="opacity-30">by</span>
         <a
-          href="https://homielab.com"
+          href="#"
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-green-600 hover:text-amber-700 transition-colors"

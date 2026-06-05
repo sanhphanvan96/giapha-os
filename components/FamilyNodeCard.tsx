@@ -32,7 +32,7 @@ export default function FamilyNodeCard({
     <div
       onClick={onClickCard}
       className={`
-        group py-2 px-1 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 rounded-3xl relative h-full
+        group pt-2 pb-6 px-1 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 rounded-3xl relative h-full
         ${isDeceased ? "grayscale-[0.4] opacity-80" : ""}
         ${showAvatar ? "w-20 sm:w-24 md:w-28 bg-surface/70 backdrop-blur-xl hover:shadow-soft-hover" : "px-3"}
         ${isEgo ? "ring-2 ring-amber-400 ring-offset-1" : ""}

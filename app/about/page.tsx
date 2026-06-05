@@ -106,10 +106,10 @@ export default function AboutPage() {
                 dụng phần mềm, hoặc muốn thảo luận thì xin vui lòng gửi email về
                 địa chỉ:{` `}
                 <a
-                  href="mailto:giaphaos@homielab.com"
+                  href="mailto:giaphaos@giaphaphangia.vercel.app"
                   className="font-semibold text-amber-700 hover:text-amber-600 transition-colors inline-flex items-center gap-1.5 mt-2"
                 >
-                  giaphaos@homielab.com
+                  giaphaos@giaphaphangia.vercel.app
                 </a>
               </p>
             </div>
