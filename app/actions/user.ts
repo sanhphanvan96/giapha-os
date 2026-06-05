@@ -1,7 +1,7 @@
 "use server";
 
 import { UserRole } from "@/types";
-import { getSupabase } from "@/utils/supabase/queries";
+import { getSupabase, getUser } from "@/utils/supabase/queries";
 import { revalidatePath } from "next/cache";
 
 export async function changeUserRole(userId: string, newRole: UserRole) {
@@ -82,5 +82,81 @@ export async function toggleUserStatus(userId: string, newStatus: boolean) {
   }
 
   revalidatePath("/dashboard/users");
+  return { success: true };
+}
+
+// Link / unlink the currently logged-in user to a person ("Đây là tôi").
+// Does NOT accept a userId param — always updates auth.uid() via SECURITY DEFINER RPC.
+export async function linkMyPerson(personId: string | null) {
+  const supabase = await getSupabase();
+  const { error } = await supabase.rpc("set_my_person", {
+    target_person_id: personId,
+  });
+
+  if (error) {
+    console.error("Failed to link person:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// Admin assigns a person to any user.
+// Access is enforced by the SECURITY DEFINER RPC (raises 'Access denied.' for non-admins).
+export async function adminSetUserPerson(
+  userId: string,
+  personId: string | null,
+) {
+  const supabase = await getSupabase();
+  const { error } = await supabase.rpc("admin_set_user_person", {
+    target_user_id: userId,
+    target_person_id: personId,
+  });
+
+  if (error) {
+    console.error("Failed to admin-set user person:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard/users");
+  return { success: true };
+}
+
+// Change own email without triggering Supabase's "Secure email change" confirmation.
+// Uses a SECURITY DEFINER RPC that writes directly to auth.users (same pattern as admin_create_user).
+export async function updateMyEmail(newEmail: string) {
+  const supabase = await getSupabase();
+  const { error } = await supabase.rpc("update_my_email", {
+    new_email: newEmail,
+  });
+
+  if (error) {
+    console.error("Failed to update email:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// Update the avatar_url of the currently logged-in user's profile.
+// Uses getUser() to obtain the uid — client never sends a userId param.
+export async function updateMyAvatar(avatarUrl: string | null) {
+  const supabase = await getSupabase();
+  const user = await getUser();
+  if (!user) return { error: "Chưa đăng nhập." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Failed to update avatar:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
   return { success: true };
 }

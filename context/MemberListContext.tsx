@@ -47,11 +47,14 @@ export function MemberListProvider({
   initialView,
   initialRootId,
   initialShowAvatar,
+  initialViewAsPersonId,
 }: {
   children: React.ReactNode;
   initialView?: ViewMode;
   initialRootId?: string | null;
   initialShowAvatar?: boolean;
+  /** Auto-select this person as the view-as ego when view=tree and URL has no viewAs param */
+  initialViewAsPersonId?: string | null;
 }) {
   const searchParams = useSearchParams();
 
@@ -70,9 +73,32 @@ export function MemberListProvider({
   const [rootId, setRootIdState] = useState<string | null>(
     () => initialRootId ?? searchParams.get("rootId") ?? null,
   );
+  // If URL has viewAs → use it. Otherwise fall back to initialViewAsPersonId
+  // (only for tree view), so the linked member is auto-selected as ego on first load.
+  const effectiveInitialView =
+    initialView ?? (searchParams.get("view") as ViewMode | null) ?? "tree";
+  const urlViewAs = searchParams.get("viewAs");
   const [viewAsPersonId, setViewAsPersonIdState] = useState<string | null>(
-    () => searchParams.get("viewAs") ?? null,
+    () =>
+      urlViewAs ??
+      (effectiveInitialView === "tree" ? (initialViewAsPersonId ?? null) : null),
   );
+
+  // On first mount: if viewAsPersonId was seeded from initialViewAsPersonId (no URL param),
+  // write it into the URL so syncFromURL keeps it consistent. Only runs once.
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      urlViewAs ||
+      !initialViewAsPersonId ||
+      effectiveInitialView !== "tree"
+    )
+      return;
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("viewAs", initialViewAsPersonId);
+    window.history.replaceState(null, "", newUrl.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Shared filter state — persists when switching between Tree / Mindmap / Bubble
   const [hideDaughtersInLaw, setHideDaughtersInLaw] = useState(false);

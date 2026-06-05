@@ -1,5 +1,5 @@
 import AdminUserList from "@/components/AdminUserList";
-import { AdminUserData } from "@/types";
+import { AdminUserData, Person } from "@/types";
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
 import { redirect } from "next/navigation";
 
@@ -13,21 +13,21 @@ export default async function AdminUsersPage() {
 
   const supabase = await getSupabase();
 
-  // Fetch users via RPC
-  const { data: users, error } = await supabase.rpc("get_admin_users");
+  // Fetch users and persons in parallel
+  const [{ data: users, error }, { data: personsData }] = await Promise.all([
+    supabase.rpc("get_admin_users"),
+    supabase.from("persons").select("id, full_name").order("full_name"),
+  ]);
 
   if (error) {
     console.error("Error fetching users:", error);
   }
 
   const typedUsers = (users as AdminUserData[]) || [];
+  const persons = (personsData as Pick<Person, "id" | "full_name">[]) || [];
 
   return (
     <main className="flex-1 overflow-auto bg-stone-50/50 flex flex-col pt-8 relative w-full">
-      {/* Decorative background blurs */}
-      {/* <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-200/20 rounded-full blur-[100px] pointer-events-none" /> */}
-      {/* <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-stone-300/20 rounded-full blur-[100px] pointer-events-none" /> */}
-
       <div className="max-w-7xl mx-auto px-4 pb-8 sm:px-6 lg:px-8 w-full relative z-10">
         <div className="mb-6">
           <h1 className="title">Quản lý Người dùng</h1>
@@ -83,7 +83,11 @@ export default async function AdminUsersPage() {
             </ul>
           </div>
         </div>
-        <AdminUserList initialUsers={typedUsers} currentUserId={profile.id} />
+        <AdminUserList
+          initialUsers={typedUsers}
+          currentUserId={profile.id}
+          persons={persons}
+        />
       </div>
     </main>
   );

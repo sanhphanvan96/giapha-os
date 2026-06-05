@@ -49,9 +49,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   role public.user_role_enum DEFAULT 'member' NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT false,
+  avatar_url TEXT,
+  person_id UUID REFERENCES public.persons(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_profiles_person_id ON public.profiles(person_id);
 
 -- PERSONS (Core entity for family tree)
 CREATE TABLE IF NOT EXISTS public.persons (
@@ -356,7 +360,9 @@ CREATE TYPE public.admin_user_data AS (
     email text,
     role public.user_role_enum,
     created_at timestamptz,
-    is_active boolean
+    is_active boolean,
+    person_id uuid,
+    person_full_name text
 );
 
 -- 1. Get List of Users for Admin
@@ -372,10 +378,72 @@ BEGIN
     END IF;
 
     RETURN QUERY
-    SELECT au.id, au.email::text, p.role, au.created_at, p.is_active
+    SELECT
+        au.id,
+        au.email::text,
+        p.role,
+        au.created_at,
+        p.is_active,
+        p.person_id,
+        pe.full_name
     FROM auth.users au
     LEFT JOIN public.profiles p ON au.id = p.id
+    LEFT JOIN public.persons pe ON p.person_id = pe.id
     ORDER BY au.created_at DESC;
+END;
+$$;
+
+-- 6. Link own profile to a person (self-service, no userId param)
+CREATE OR REPLACE FUNCTION public.set_my_person(target_person_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET person_id = target_person_id
+  WHERE id = auth.uid();
+END;
+$$;
+
+-- 7. Admin assigns a person to any user
+CREATE OR REPLACE FUNCTION public.admin_set_user_person(
+  target_user_id uuid,
+  target_person_id uuid
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
+  ) THEN
+    RAISE EXCEPTION 'Access denied.';
+  END IF;
+
+  UPDATE public.profiles
+  SET person_id = target_person_id
+  WHERE id = target_user_id;
+END;
+$$;
+
+-- 8. Update own email without confirmation (bypasses "Secure email change" flow)
+CREATE OR REPLACE FUNCTION public.update_my_email(new_email text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+  UPDATE auth.users
+  SET
+    email = new_email,
+    email_confirmed_at = now(),
+    updated_at = now()
+  WHERE id = auth.uid();
 END;
 $$;
 
