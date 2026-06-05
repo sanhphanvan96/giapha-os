@@ -5,7 +5,7 @@ import { UserProvider } from "@/components/UserProvider";
 import { ViewMode } from "@/components/ViewToggle";
 import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/server";
-import { AlertCircle, ArrowLeft, Network } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock, Eye, Network } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
@@ -124,15 +124,18 @@ export default async function PublicSharePage({ params }: PageProps) {
               <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5 truncate max-w-[130px] min-[400px]:max-w-[180px] sm:max-w-none shrink-0">
                 {config.siteName}
               </h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800 shadow-sm shrink-0">
-                <span>Chỉ xem</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-stone-100 border border-stone-200 text-stone-600">
+                  <Eye className="size-3 shrink-0" />
+                  <span>Chỉ xem</span>
+                </span>
                 {expiryLabel && (
-                  <>
-                    <span className="text-amber-300 mx-0.5">|</span>
-                    <span className="text-amber-700 font-medium">{expiryLabel}</span>
-                  </>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-amber-50 border border-amber-200 text-amber-700">
+                    <Clock className="size-3 shrink-0" />
+                    <span>{expiryLabel}</span>
+                  </span>
                 )}
-              </span>
+              </div>
             </div>
             <Link
               href="/login"

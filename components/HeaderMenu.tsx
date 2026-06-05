@@ -49,6 +49,7 @@ export default function HeaderMenu() {
               alt={userEmail ?? ""}
               width={32}
               height={32}
+              loading="eager"
               className="w-full h-full object-cover"
             />
           ) : userEmail ? (
