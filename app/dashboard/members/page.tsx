@@ -27,7 +27,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
       )
       .order("generation", { ascending: true, nullsFirst: false })
       .order("birth_year", { ascending: true, nullsFirst: false }),
-    supabase.from("relationships").select("id, type, person_a, person_b, note"),
+    supabase.from("relationships").select("id, type, person_a, person_b, note, created_at, updated_at"),
   ]);
 
   const canEdit = profile?.role === "admin" || profile?.role === "editor";
