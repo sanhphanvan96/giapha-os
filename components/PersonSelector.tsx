@@ -30,6 +30,7 @@ export default function PersonSelector({
   className = "w-full sm:w-72",
   showAllOption = false,
   allOptionLabel = "Toàn bộ dữ liệu",
+  allOptionIcon,
 }: {
   persons: Person[];
   selectedId?: string | null;
@@ -39,6 +40,7 @@ export default function PersonSelector({
   className?: string;
   showAllOption?: boolean;
   allOptionLabel?: string;
+  allOptionIcon?: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -105,7 +107,7 @@ export default function PersonSelector({
                 <DefaultAvatar gender={currentPerson.gender} size={32} />
               )
             ) : showAllOption && selectedId === null ? (
-              <Database className="size-4" />
+              allOptionIcon || <Database className="size-4" />
             ) : (
               "?"
             )}
@@ -190,7 +192,7 @@ export default function PersonSelector({
                 >
                   <div className="relative shrink-0">
                     <div className="size-8 rounded-full bg-stone-500 flex items-center justify-center text-white ring-1 ring-white shadow-xs">
-                      <Database className="size-4" />
+                      {allOptionIcon || <Database className="size-4" />}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 text-left">
