@@ -18,6 +18,7 @@ import {
 import { Lunar, Solar } from "lunar-javascript";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { compressImage } from "@/utils/imageCompressor";
 
 interface MemberFormProps {
   initialData?: Person;
@@ -704,11 +705,31 @@ export default function MemberForm({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          setAvatarFile(file);
-                          setAvatarPreview(URL.createObjectURL(file));
+                          if (!file.type.startsWith("image/")) {
+                            setError("Định dạng file không hợp lệ. Vui lòng chọn ảnh.");
+                            return;
+                          }
+                          if (file.size > 10 * 1024 * 1024) {
+                            setError("Kích thước ảnh gốc phải nhỏ hơn 10MB.");
+                            return;
+                          }
+                          try {
+                            const compressed = await compressImage(file, {
+                              maxWidth: 512,
+                              maxHeight: 512,
+                              quality: 0.8,
+                              outputType: "image/webp",
+                            });
+                            setAvatarFile(compressed);
+                            setAvatarPreview(URL.createObjectURL(compressed));
+                            setError(null);
+                          } catch (err) {
+                            console.error("Lỗi khi nén ảnh:", err);
+                            setError("Không thể nén ảnh này. Vui lòng thử lại.");
+                          }
                         }
                       }}
                       className="absolute inset-0 w-full h-full opacity-0"
@@ -768,7 +789,7 @@ export default function MemberForm({
                 </div>
                 <p className="mt-2.5 text-xs text-stone-500 flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 text-stone-400" />
-                  Hỗ trợ PNG, JPG, GIF tối đa 2MB.
+                  Hỗ trợ PNG, JPG, GIF tối đa 10MB (tự động tối ưu dung lượng).
                 </p>
               </div>
             </div>

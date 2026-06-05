@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Camera, KeyRound, Mail, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { compressImage } from "@/utils/imageCompressor";
 
 interface ProfileFormProps {
   userId: string;
@@ -49,23 +50,42 @@ export default function ProfileForm({
 
   // ── Avatar upload ──────────────────────────────────────────────────────────
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const originalFile = e.target.files?.[0];
+    if (!originalFile) return;
 
-    // Local preview immediately
-    const objectUrl = URL.createObjectURL(file);
-    setAvatarUrl(objectUrl);
+    // Validate size and file type first
+    if (!originalFile.type.startsWith("image/")) {
+      setAvatarStatus({ type: "error", message: "Định dạng file không hợp lệ. Vui lòng chọn ảnh." });
+      return;
+    }
+    if (originalFile.size > 10 * 1024 * 1024) {
+      setAvatarStatus({ type: "error", message: "Kích thước ảnh gốc phải nhỏ hơn 10MB." });
+      return;
+    }
+
     setIsUploadingAvatar(true);
     setAvatarStatus(null);
 
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const filePath = `profile_${userId}.${ext}`;
+      
+      // Compress the image before uploading
+      const compressedFile = await compressImage(originalFile, {
+        maxWidth: 512,
+        maxHeight: 512,
+        quality: 0.8,
+        outputType: "image/webp",
+      });
+
+      // Local preview immediately using compressed version
+      const objectUrl = URL.createObjectURL(compressedFile);
+      setAvatarUrl(objectUrl);
+
+      const filePath = `profile_${userId}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, compressedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -86,6 +106,8 @@ export default function ProfileForm({
         type: "error",
         message: err instanceof Error ? err.message : "Lỗi khi tải ảnh lên.",
       });
+      // Restore avatar URL in case of error
+      setAvatarUrl(currentAvatarUrl);
     } finally {
       setIsUploadingAvatar(false);
     }
