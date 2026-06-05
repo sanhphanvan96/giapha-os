@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Lunar, Solar } from "lunar-javascript";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { compressImage } from "@/utils/imageCompressor";
 
 interface MemberFormProps {
@@ -28,6 +28,8 @@ interface MemberFormProps {
   onSuccess?: (personId: string) => void;
   /** Called when user clicks Cancel. Overrides default router.back(). */
   onCancel?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 export default function MemberForm({
@@ -36,11 +38,14 @@ export default function MemberForm({
   canEditPrivate = false,
   onSuccess,
   onCancel,
+  onDirtyChange,
+  onLoadingChange,
 }: MemberFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [fullName, setFullName] = useState(initialData?.full_name || "");
@@ -280,6 +285,50 @@ export default function MemberForm({
       }
     }
   };
+
+  const isDirty = 
+    fullName !== (initialData?.full_name || "") ||
+    otherNames !== (initialData?.other_names || "") ||
+    gender !== (initialData?.gender || "male") ||
+    isInLaw !== (initialData?.is_in_law || false) ||
+    birthOrder !== (initialData?.birth_order || "") ||
+    generation !== (initialData?.generation || "") ||
+    birthYear !== (initialData?.birth_year || "") ||
+    birthMonth !== (initialData?.birth_month || "") ||
+    birthDay !== (initialData?.birth_day || "") ||
+    birthLunarYear !== (initialData?.birth_lunar_year || "") ||
+    birthLunarMonth !== (initialData?.birth_lunar_month || "") ||
+    birthLunarDay !== (initialData?.birth_lunar_day || "") ||
+    hasDifferentLegalBirth !== (!!initialData?.legal_birth_year) ||
+    legalBirthYear !== (initialData?.legal_birth_year || "") ||
+    legalBirthMonth !== (initialData?.legal_birth_month || "") ||
+    legalBirthDay !== (initialData?.legal_birth_day || "") ||
+    birthdayRemindType !== (initialData?.birthday_remind_type || "actual_solar") ||
+    isDeceased !== (initialData?.is_deceased || false) ||
+    deathYear !== (initialData?.death_year || "") ||
+    deathMonth !== (initialData?.death_month || "") ||
+    deathDay !== (initialData?.death_day || "") ||
+    deathLunarYear !== (initialData?.death_lunar_year || "") ||
+    deathLunarMonth !== (initialData?.death_lunar_month || "") ||
+    deathLunarDay !== (initialData?.death_lunar_day || "") ||
+    phoneNumber !== (initialData?.phone_number || "") ||
+    occupation !== (initialData?.occupation || "") ||
+    currentResidence !== (initialData?.current_residence || "") ||
+    note !== (initialData?.note || "") ||
+    avatarUrl !== (initialData?.avatar_url || "") ||
+    avatarFile !== null;
+
+  useEffect(() => {
+    if (onDirtyChange) {
+      onDirtyChange(isDirty);
+    }
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(loading);
+    }
+  }, [loading, onLoadingChange]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -544,13 +593,8 @@ export default function MemberForm({
     "bg-white text-stone-900 placeholder-stone-500 block w-full rounded-xl border border-stone-300 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:bg-white text-sm px-4 py-3 transition-all outline-none!";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-      <motion.div
-        variants={formSectionVariants}
-        initial="hidden"
-        animate="show"
-        className="bg-white/80 p-5 sm:p-8 rounded-2xl shadow-sm border border-stone-200/80"
-      >
+    <form id="member-form" onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+      <div className="bg-white/80 p-5 sm:p-8 rounded-2xl shadow-sm border border-stone-200/80">
         <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-800 mb-6 border-b border-stone-100 pb-4 flex items-center gap-2">
           <User className="size-5 text-amber-600" />
           Thông tin chung
@@ -683,7 +727,8 @@ export default function MemberForm({
             </label>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 bg-stone-50/50 p-4 rounded-xl border border-stone-100">
               <div
-                className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-xl font-bold text-white overflow-hidden shrink-0 shadow-md border-4 border-white
+                onClick={() => fileInputRef.current?.click()}
+                className={`group/avatar relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-xl font-bold text-white overflow-hidden shrink-0 shadow-md border-4 border-white cursor-pointer transition-all duration-300 hover:scale-105 hover:border-amber-500 hover:shadow-lg active:scale-98
                   ${!avatarPreview ? (gender === "male" ? "bg-linear-to-br from-sky-400 to-sky-700" : gender === "female" ? "bg-linear-to-br from-rose-400 to-rose-700" : "bg-linear-to-br from-stone-400 to-stone-600") : ""}`}
               >
                 {avatarPreview ? (
@@ -691,18 +736,24 @@ export default function MemberForm({
                   <img
                     src={avatarPreview}
                     alt="Avatar preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover/avatar:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <span className="opacity-90">
+                  <span className="opacity-90 group-hover/avatar:scale-105 transition-transform duration-300">
                     {fullName ? fullName.charAt(0).toUpperCase() : "?"}
                   </span>
                 )}
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center transition-opacity duration-300">
+                  <ImageIcon className="size-5 sm:size-6 text-white mb-0.5" />
+                  <span className="text-[10px] text-white/90 font-medium select-none">Tải ảnh</span>
+                </div>
               </div>
               <div className="flex-1 w-full">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="relative">
                     <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       onChange={async (e) => {
@@ -732,11 +783,12 @@ export default function MemberForm({
                           }
                         }
                       }}
-                      className="absolute inset-0 w-full h-full opacity-0"
+                      className="hidden"
                     />
                     <button
                       type="button"
-                      className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100 hover:border-amber-300 transition-colors rounded-lg"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100 hover:border-amber-300 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 rounded-lg cursor-pointer"
                     >
                       <ImageIcon className="size-4" />
                       Chọn ảnh mới
@@ -780,7 +832,7 @@ export default function MemberForm({
                         setAvatarFile(null);
                         setAvatarPreview(null);
                       }}
-                      className="flex items-center gap-2 text-sm text-rose-600 hover:text-rose-700 font-medium px-4 py-2 border border-rose-200 rounded-lg bg-rose-50 hover:bg-rose-100 transition-colors"
+                      className="flex items-center gap-2 text-sm text-rose-600 hover:text-rose-700 font-medium px-4 py-2 border border-rose-200 rounded-lg bg-rose-50 hover:bg-rose-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0"
                     >
                       <Trash2 className="size-4" />
                       Xóa ảnh
@@ -922,7 +974,7 @@ export default function MemberForm({
             </div>
 
             {/* Form nhập ngày sinh giấy tờ */}
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {hasDifferentLegalBirth && (
                 <motion.div
                   initial={{ opacity: 0, height: 0, marginTop: 0 }}
@@ -1066,7 +1118,7 @@ export default function MemberForm({
               </label>
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {isDeceased && (
                 <motion.div
                   initial={{ opacity: 0, height: 0, marginTop: 0 }}
@@ -1178,17 +1230,11 @@ export default function MemberForm({
             />
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Private Information Section (Admin Only) */}
       {canEditPrivate && (
-        <motion.div
-          variants={formSectionVariants}
-          initial="hidden"
-          animate="show"
-          transition={{ delay: 0.1 }}
-          className="bg-linear-to-br from-amber-50/80 to-stone-50/80 p-5 sm:p-8 rounded-2xl border border-amber-200/50 shadow-sm relative overflow-hidden"
-        >
+        <div className="bg-linear-to-br from-amber-50/80 to-stone-50/80 p-5 sm:p-8 rounded-2xl border border-amber-200/50 shadow-sm relative overflow-hidden">
           {/* Decorative Background Icon */}
           <Lock className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/5 rotate-12" />
 
@@ -1248,7 +1294,7 @@ export default function MemberForm({
               />
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       <AnimatePresence>
@@ -1265,13 +1311,7 @@ export default function MemberForm({
         )}
       </AnimatePresence>
 
-      <motion.div
-        variants={formSectionVariants}
-        initial="hidden"
-        animate="show"
-        transition={{ delay: 0.2 }}
-        className="flex justify-end gap-3 sm:gap-4 pt-6"
-      >
+      <div className="flex justify-end gap-3 sm:gap-4 pt-6">
         <button
           type="button"
           onClick={() => (onCancel ? onCancel() : router.back())}
@@ -1287,7 +1327,7 @@ export default function MemberForm({
               ? "Lưu thay đổi"
               : "Thêm thành viên"}
         </button>
-      </motion.div>
+      </div>
     </form>
   );
 }

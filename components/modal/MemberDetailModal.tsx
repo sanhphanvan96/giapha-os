@@ -4,10 +4,10 @@ import MemberDetailContent from "@/context/MemberDetailContent";
 import MemberForm from "@/components/MemberForm";
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Edit2, ExternalLink, UserCheck, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Edit2, ExternalLink, Loader2, UserCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMemberListView } from "@/context/MemberListContext";
 import { useUser } from "@/components/UserProvider";
 import { linkMyPerson } from "@/app/actions/user";
@@ -27,6 +27,10 @@ export default function MemberDetailModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+
+  console.log("MemberDetailModal render:", { memberId, isEditing, formDirty, formLoading });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +45,36 @@ export default function MemberDetailModal() {
     setMemberModalId(null);
     setShowCreateMember(false);
     setIsEditing(false);
+    setFormDirty(false);
+    setFormLoading(false);
+  };
+
+  const handleCancel = () => {
+    if (formDirty) {
+      if (confirm("Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn hủy bỏ?")) {
+        if (showCreateMember) {
+          setShowCreateMember(false);
+        } else {
+          setIsEditing(false);
+        }
+      }
+    } else {
+      if (showCreateMember) {
+        setShowCreateMember(false);
+      } else {
+        setIsEditing(false);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    if ((isEditing || showCreateMember) && formDirty) {
+      if (confirm("Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn đóng?")) {
+        closeModal();
+      }
+    } else {
+      closeModal();
+    }
   };
 
   const handleLinkPerson = async (personId: string | null) => {
@@ -54,18 +88,25 @@ export default function MemberDetailModal() {
     router.refresh();
   };
 
+  const personsRef = useRef(persons);
+  useEffect(() => {
+    personsRef.current = persons;
+  }, [persons]);
+
   const fetchData = useCallback(
-    async (id: string) => {
+    async (id: string, forceRefetch = false) => {
       setLoading(true);
       setError(null);
       try {
         // 1. Tìm trong context persons trước (giúp tải ngay lập tức và tránh lỗi RLS cho khách)
-        const localPerson = persons.find((p) => p.id === id);
-        if (localPerson) {
-          setPerson(localPerson);
-          setPrivateData(null);
-          setLoading(false);
-          return;
+        if (!forceRefetch) {
+          const localPerson = personsRef.current.find((p) => p.id === id);
+          if (localPerson) {
+            setPerson(localPerson);
+            setPrivateData(null);
+            setLoading(false);
+            return;
+          }
         }
 
         // 2. Tải dữ liệu công khai từ Supabase (fallback)
@@ -99,7 +140,7 @@ export default function MemberDetailModal() {
         setLoading(false);
       }
     },
-    [canEdit, supabase, persons],
+    [canEdit, supabase],
   );
 
   // Sync state with URL parameter or create mode
@@ -108,8 +149,10 @@ export default function MemberDetailModal() {
 
     if (memberId) {
       setIsOpen(true);
-      setIsEditing(false); // always start on detail view when opening
-      fetchData(memberId);
+      if (!person || person.id !== memberId) {
+        setIsEditing(false); // always start on detail view when opening
+        fetchData(memberId);
+      }
     } else if (showCreateMember) {
       setIsOpen(true);
       setIsEditing(false);
@@ -129,7 +172,7 @@ export default function MemberDetailModal() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [memberId, showCreateMember, fetchData]);
+  }, [memberId, showCreateMember, fetchData, person]);
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -149,7 +192,7 @@ export default function MemberDetailModal() {
     setIsEditing(false);
     setPerson(null);
     setPrivateData(null);
-    fetchData(savedPersonId);
+    fetchData(savedPersonId, true);
     // Revalidate Next.js server component cache so the dashboard list/members updates
     router.refresh();
   };
@@ -167,9 +210,9 @@ export default function MemberDetailModal() {
   };
 
   // initialData for MemberForm — merge public + private
-  const formInitialData = person
-    ? { ...person, ...(privateData ?? {}) }
-    : undefined;
+  const formInitialData = useMemo(() => {
+    return person ? { ...person, ...(privateData ?? {}) } : undefined;
+  }, [person, privateData]);
 
   return (
     <AnimatePresence>
@@ -191,27 +234,34 @@ export default function MemberDetailModal() {
 
           {/* Modal Content */}
           <motion.div
-            layout
             initial={{ scale: 0.96, opacity: 0, y: 15 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 15 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            layoutDependency={false}
-            className="relative bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-stone-200"
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-stone-200"
           >
             {/* Sticky Header Actions */}
             <div className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 flex items-center gap-2">
-              {isEditing ? (
-                /* In edit mode — show back button */
-                <button
-                  onClick={() => {
-                    setIsEditing(false);
-                  }}
-                  className="inline-flex items-center justify-center shrink-0 gap-1.5 px-3 py-2.5 bg-stone-100/80 text-stone-700 rounded-full hover:bg-stone-200 font-medium text-sm border border-stone-200/50 hover:-translate-y-1 hover:shadow-soft-hover transition-all duration-300"
-                >
-                  <ArrowLeft className="size-4" />
-                  <span className="hidden sm:inline">Quay lại</span>
-                </button>
+              {isEditing || showCreateMember ? (
+                /* In edit/create mode — show Cancel and Save/Create buttons */
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    form="member-form"
+                    disabled={formLoading || (!showCreateMember && !formDirty)}
+                    className="inline-flex items-center justify-center shrink-0 gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-full shadow-xs hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  >
+                    {formLoading && <Loader2 className="size-4 animate-spin" />}
+                    <span>{showCreateMember ? "Thêm mới" : "Lưu thay đổi"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="inline-flex items-center justify-center shrink-0 gap-1.5 px-3 py-2 bg-stone-100/80 text-stone-700 rounded-full hover:bg-stone-200 font-semibold text-sm border border-stone-200/50 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 transition-all duration-300 cursor-pointer"
+                  >
+                    <span>Hủy bỏ</span>
+                  </button>
+                </div>
               ) : (
                 person && (
                   <>
@@ -273,7 +323,7 @@ export default function MemberDetailModal() {
                 )
               )}
               <button
-                onClick={closeModal}
+                onClick={handleClose}
                 className="size-10 flex items-center justify-center bg-stone-100/80 text-stone-600 rounded-full hover:bg-stone-200 hover:text-stone-900 shadow-sm border border-stone-200/50 transition-colors"
                 aria-label="Đóng"
               >
@@ -318,10 +368,10 @@ export default function MemberDetailModal() {
                 /* ── EDIT MODE ── */
                 <motion.div
                   key="editing"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 pt-16 pb-8"
                 >
                   <h2 className="text-xl font-serif font-bold text-stone-800 mb-6">
@@ -336,17 +386,19 @@ export default function MemberDetailModal() {
                     isEditing={true}
                     canEditPrivate={canEdit}
                     onSuccess={handleEditSuccess}
-                    onCancel={() => setIsEditing(false)}
+                    onCancel={handleCancel}
+                    onDirtyChange={setFormDirty}
+                    onLoadingChange={setFormLoading}
                   />
                 </motion.div>
               ) : showCreateMember ? (
                 /* ── CREATE MODE ── */
                 <motion.div
                   key="creating"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 pt-16 pb-8"
                 >
                   <h2 className="text-xl font-serif font-bold text-stone-800 mb-6">
@@ -355,17 +407,19 @@ export default function MemberDetailModal() {
                   <MemberForm
                     canEditPrivate={canEdit}
                     onSuccess={handleCreateSuccess}
-                    onCancel={closeModal}
+                    onCancel={handleCancel}
+                    onDirtyChange={setFormDirty}
+                    onLoadingChange={setFormLoading}
                   />
                 </motion.div>
               ) : person ? (
                 /* ── DETAIL MODE ── */
                 <motion.div
                   key="details"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   className="flex-1 overflow-y-auto custom-scrollbar"
                 >
                   <MemberDetailContent
