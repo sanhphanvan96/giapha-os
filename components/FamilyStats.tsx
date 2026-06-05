@@ -78,63 +78,25 @@ function StatCard({
   );
 }
 
-// Generation breakdown row
-function GenerationRow({
-  gen,
-  count,
-  max,
-  delay,
-}: {
-  gen: number;
-  count: number;
-  max: number;
-  delay: number;
-}) {
-  const pct = max > 0 ? (count / max) * 100 : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs font-bold text-stone-500 w-14 shrink-0">
-        Đời {gen}
-      </span>
-      <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, delay, ease: "easeOut" }}
-          className="h-full bg-amber-400 rounded-full"
-        />
-      </div>
-      <span className="text-sm font-bold text-stone-700 w-8 text-right shrink-0">
-        {count}
-      </span>
-    </div>
-  );
-}
 
 export default function FamilyStats({
   persons,
   relationships,
 }: FamilyStatsProps) {
   const stats = useMemo(() => {
-    const total = persons.length;
+    // Filter out in-laws (con dâu, con rể) from statistics
+    const bloodlinePersons = persons.filter((p) => !p.is_in_law);
+    const total = bloodlinePersons.length;
 
     // Gender
-    const male = persons.filter((p) => p.gender === "male").length;
-    const female = persons.filter((p) => p.gender === "female").length;
-
-    // In-laws
-    const daughtersInLaw = persons.filter(
-      (p) => p.is_in_law && p.gender === "female",
-    ).length;
-    const sonsInLaw = persons.filter(
-      (p) => p.is_in_law && p.gender === "male",
-    ).length;
+    const male = bloodlinePersons.filter((p) => p.gender === "male").length;
+    const female = bloodlinePersons.filter((p) => p.gender === "female").length;
 
     // Deceased
-    const deceased = persons.filter((p) => p.is_deceased).length;
+    const deceased = bloodlinePersons.filter((p) => p.is_deceased).length;
 
     // First-born (con trưởng)
-    const firstBorn = persons.filter((p) => p.birth_order === 1).length;
+    const firstBorn = bloodlinePersons.filter((p) => p.birth_order === 1).length;
 
     // Married / unmarried (based on marriage relationships)
     const marriedIds = new Set<string>();
@@ -144,7 +106,7 @@ export default function FamilyStats({
         marriedIds.add(r.person_a);
         marriedIds.add(r.person_b);
       });
-    const married = persons.filter((p) => marriedIds.has(p.id)).length;
+    const married = bloodlinePersons.filter((p) => marriedIds.has(p.id)).length;
     const unmarried = total - married;
 
     // Generation breakdown
@@ -152,7 +114,7 @@ export default function FamilyStats({
     const zodiacMap = new Map<string, number>();
     const chineseZodiacMap = new Map<string, number>();
 
-    persons.forEach((p) => {
+    bloodlinePersons.forEach((p) => {
       // Generations
       if (p.generation != null) {
         genMap.set(p.generation, (genMap.get(p.generation) ?? 0) + 1);
@@ -194,8 +156,6 @@ export default function FamilyStats({
       total,
       male,
       female,
-      daughtersInLaw,
-      sonsInLaw,
       deceased,
       firstBorn,
       married,
@@ -224,30 +184,6 @@ export default function FamilyStats({
       value: stats.female,
       icon: <Venus className="size-5 text-pink-500" />,
       color: "bg-pink-400",
-    },
-    {
-      label: "Con dâu",
-      value: stats.daughtersInLaw,
-      icon: <Flower2 className="size-5 text-rose-500" />,
-      color: "bg-rose-400",
-    },
-    {
-      label: "Con rể",
-      value: stats.sonsInLaw,
-      icon: <Users className="size-5 text-indigo-500" />,
-      color: "bg-indigo-400",
-    },
-    {
-      label: "Đã kết hôn",
-      value: stats.married,
-      icon: <Heart className="size-5 text-red-500" />,
-      color: "bg-red-400",
-    },
-    {
-      label: "Chưa kết hôn",
-      value: stats.unmarried,
-      icon: <HeartOff className="size-5 text-stone-400" />,
-      color: "bg-stone-300",
     },
     {
       label: "Đã mất",
@@ -280,34 +216,6 @@ export default function FamilyStats({
         ))}
       </div>
 
-      {/* Generation Breakdown */}
-      {stats.generationBreakdown.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="card-feature"
-        >
-          <h2 className="text-base font-bold text-stone-700 mb-5 flex items-center gap-2">
-            <Crown className="size-4 text-amber-500" />
-            Phân bố theo thế hệ
-          </h2>
-          <div className="space-y-3">
-            {stats.generationBreakdown.map(({ gen, count }, i) => (
-              <GenerationRow
-                key={gen}
-                gen={gen}
-                count={count}
-                max={stats.total}
-                delay={0.55 + i * 0.07}
-              />
-            ))}
-          </div>
-          <p className="text-xs text-stone-400 mt-4 italic">
-            * Chỉ tính các thành viên đã được gán số thế hệ
-          </p>
-        </motion.div>
-      )}
 
       {/* Gender ratio visual */}
       <motion.div

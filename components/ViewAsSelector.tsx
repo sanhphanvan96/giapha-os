@@ -3,6 +3,7 @@
 import { Person } from "@/types";
 import { useMemberListView } from "@/context/MemberListContext";
 import PersonSelector from "./PersonSelector";
+import { EyeOff } from "lucide-react";
 
 export default function ViewAsSelector({ persons }: { persons: Person[] }) {
   const { viewAsPersonId, setViewAsPersonId } = useMemberListView();
@@ -17,6 +18,7 @@ export default function ViewAsSelector({ persons }: { persons: Person[] }) {
       className="w-full sm:w-72"
       showAllOption
       allOptionLabel="Tắt danh xưng"
+      allOptionIcon={<EyeOff className="size-4" />}
     />
   );
 }

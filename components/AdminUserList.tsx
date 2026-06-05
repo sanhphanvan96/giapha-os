@@ -11,12 +11,160 @@ import config from "@/app/config";
 import { AdminUserData, UserRole } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface AdminUserListProps {
   initialUsers: AdminUserData[];
   currentUserId: string;
   persons: { id: string; full_name: string }[];
+}
+
+interface PersonSearchSelectorProps {
+  userId: string;
+  currentPersonId: string | null;
+  currentPersonName: string | null;
+  persons: { id: string; full_name: string }[];
+  onChange: (userId: string, personId: string | null) => void;
+  disabled?: boolean;
+}
+
+function PersonSearchSelector({
+  userId,
+  currentPersonId,
+  currentPersonName,
+  persons,
+  onChange,
+  disabled,
+}: PersonSearchSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+        return;
+      }
+      if (buttonRef.current && buttonRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    if (isOpen) {
+      updateCoords();
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("resize", updateCoords);
+      window.addEventListener("scroll", updateCoords, true);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", updateCoords);
+      window.removeEventListener("scroll", updateCoords, true);
+    };
+  }, [isOpen]);
+
+  const filteredPersons = persons.filter((p) =>
+    p.full_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-[180px] text-left bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200 text-xs rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-amber-500 focus:border-amber-500 hover:border-stone-300 transition-all disabled:opacity-50 outline-none flex justify-between items-center cursor-pointer"
+        title={currentPersonName ?? "Chưa gắn thành viên"}
+      >
+        <span className="truncate flex-1 pr-1 font-medium">
+          {currentPersonName ?? "— Chưa gắn —"}
+        </span>
+        <svg
+          className={`size-3 text-stone-400 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && typeof document !== "undefined" && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: "absolute",
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            width: "240px",
+          }}
+          className="bg-white rounded-xl shadow-lg border border-stone-200 p-2 z-[9999] flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-150"
+        >
+          <input
+            type="text"
+            placeholder="Tìm thành viên..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none placeholder-stone-400"
+            autoFocus
+          />
+          <div className="max-h-[180px] overflow-y-auto custom-scrollbar mt-2 space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(userId, null);
+                setIsOpen(false);
+                setSearch("");
+              }}
+              className={`w-full text-left px-2.5 py-2 text-xs rounded-lg transition-colors cursor-pointer hover:bg-stone-50 block ${
+                !currentPersonId ? "bg-amber-50 text-amber-800 font-semibold" : "text-stone-500"
+              }`}
+            >
+              — Chưa gắn —
+            </button>
+            {filteredPersons.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  onChange(userId, p.id);
+                  setIsOpen(false);
+                  setSearch("");
+                }}
+                className={`w-full text-left px-2.5 py-2 text-xs rounded-lg transition-colors cursor-pointer hover:bg-stone-50 block truncate ${
+                  currentPersonId === p.id ? "bg-amber-50 text-amber-800 font-semibold" : "text-stone-700"
+                }`}
+              >
+                {p.full_name}
+              </button>
+            ))}
+            {filteredPersons.length === 0 && (
+              <div className="px-2.5 py-3 text-center text-xs text-stone-400 italic">
+                Không tìm thấy kết quả
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
 }
 
 interface Notification {
@@ -403,25 +551,14 @@ export default function AdminUserList({
                     </button>
                   </td>
                   <td className="px-6 py-4">
-                    <select
-                      value={user.person_id ?? ""}
-                      onChange={(e) =>
-                        handlePersonChange(
-                          user.id,
-                          e.target.value || null,
-                        )
-                      }
+                    <PersonSearchSelector
+                      userId={user.id}
+                      currentPersonId={user.person_id}
+                      currentPersonName={user.person_full_name}
+                      persons={persons}
+                      onChange={handlePersonChange}
                       disabled={loadingId === user.id}
-                      className="bg-stone-50 text-stone-700 border border-stone-200 text-xs rounded-md focus:ring-amber-500 focus:border-amber-500 px-2 py-1 hover:border-stone-300 transition-colors disabled:opacity-50 outline-none max-w-[180px] truncate"
-                      title={user.person_full_name ?? "Chưa gắn thành viên"}
-                    >
-                      <option value="">— Chưa gắn —</option>
-                      {persons.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.full_name}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </td>
                   <td className="px-6 py-4 text-stone-500">
                     {new Date(user.created_at).toLocaleDateString("vi-VN")}
