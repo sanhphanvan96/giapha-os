@@ -22,7 +22,7 @@ import { useState } from "react";
 interface MemberFormProps {
   initialData?: Person;
   isEditing?: boolean;
-  isAdmin?: boolean;
+  canEditPrivate?: boolean;
   /** Called with the saved person's ID after a successful save. Overrides default router.push. */
   onSuccess?: (personId: string) => void;
   /** Called when user clicks Cancel. Overrides default router.back(). */
@@ -32,7 +32,7 @@ interface MemberFormProps {
 export default function MemberForm({
   initialData,
   isEditing = false,
-  isAdmin = false,
+  canEditPrivate = false,
   onSuccess,
   onCancel,
 }: MemberFormProps) {
@@ -485,7 +485,7 @@ export default function MemberForm({
       }
 
       // 3. Upsert private data (only if admin and currentPersonId exists)
-      if (isAdmin && currentPersonId) {
+      if (canEditPrivate && currentPersonId) {
         const normalizedData = {
           person_id: currentPersonId,
           phone_number: phoneNumber?.trim() || null,
@@ -1160,7 +1160,7 @@ export default function MemberForm({
       </motion.div>
 
       {/* Private Information Section (Admin Only) */}
-      {isAdmin && (
+      {canEditPrivate && (
         <motion.div
           variants={formSectionVariants}
           initial="hidden"
@@ -1177,7 +1177,7 @@ export default function MemberForm({
             </span>
             <span>Thông tin riêng tư</span>
             <span className="text-[10px] ml-auto sm:ml-2 font-bold bg-amber-200/80 text-amber-800 uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs border border-amber-300/60">
-              Chỉ Admin
+              Admin &amp; Biên tập
             </span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">

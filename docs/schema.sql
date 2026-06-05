@@ -222,10 +222,12 @@ CREATE POLICY "Admins and Editors can delete persons" ON public.persons FOR DELE
 
 -- PERSON_DETAILS_PRIVATE POLICIES
 DROP POLICY IF EXISTS "Admins can view private details" ON public.person_details_private;
-CREATE POLICY "Admins can view private details" ON public.person_details_private FOR SELECT TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "Admins and Editors can view private details" ON public.person_details_private;
+CREATE POLICY "Admins and Editors can view private details" ON public.person_details_private FOR SELECT TO authenticated USING (public.is_admin() OR public.is_editor());
 
 DROP POLICY IF EXISTS "Admins can manage private details" ON public.person_details_private;
-CREATE POLICY "Admins can manage private details" ON public.person_details_private FOR ALL TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "Admins and Editors can manage private details" ON public.person_details_private;
+CREATE POLICY "Admins and Editors can manage private details" ON public.person_details_private FOR ALL TO authenticated USING (public.is_admin() OR public.is_editor()); ON public.person_details_private FOR ALL TO authenticated USING (public.is_admin());
 
 -- RELATIONSHIPS POLICIES
 DROP POLICY IF EXISTS "Enable read access for authenticated users" ON public.relationships;
