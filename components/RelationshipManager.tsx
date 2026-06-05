@@ -7,8 +7,9 @@ import { getAvatarBg } from "@/utils/styleHelprs";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import DefaultAvatar from "./DefaultAvatar";
+import { removeDiacritics } from "@/utils/stringHelpers";
 
 interface RelationshipManagerProps {
   person: Person;
@@ -70,8 +71,7 @@ export default function RelationshipManager({
   >("parent");
   const [newRelNote, setNewRelNote] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<Person[]>([]);
-  const [recentMembers, setRecentMembers] = useState<Person[]>([]);
+  const [allPersons, setAllPersons] = useState<Person[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -277,43 +277,41 @@ export default function RelationshipManager({
     fetchRelationships();
   }, [fetchRelationships]);
 
-  // Search for people to add
+  // Fetch all persons to search/display client-side when the form is open
   useEffect(() => {
-    const searchPeople = async () => {
-      if (searchTerm.length < 2) {
-        setSearchResults([]);
-        return;
-      }
-
-      const { data } = await supabase
-        .from("persons")
-        .select("*")
-        .ilike("full_name", `%${searchTerm}%`)
-        .neq("id", personId) // Exclude self
-        .limit(5);
-
-      if (data) setSearchResults(data);
-    };
-
-    const timeoutId = setTimeout(searchPeople, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, personId, supabase]);
-
-  // Fetch recent members when opening Add form
-  useEffect(() => {
-    if (isAdding && recentMembers.length === 0) {
-      const fetchRecent = async () => {
+    if (isAdding && allPersons.length === 0) {
+      const fetchAll = async () => {
         const { data } = await supabase
           .from("persons")
-          .select("*")
-          .neq("id", personId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (data) setRecentMembers(data);
+          .select("id, full_name, other_names, gender, avatar_url, birth_year, birth_month, birth_day, created_at")
+          .neq("id", personId);
+        if (data) setAllPersons(data as Person[]);
       };
-      fetchRecent();
+      fetchAll();
     }
-  }, [isAdding, personId, supabase, recentMembers.length]);
+  }, [isAdding, personId, supabase, allPersons.length]);
+
+  // Filter persons by name or alias (ignore accents/diacritics)
+  const searchResults = useMemo(() => {
+    if (searchTerm.length < 2 || selectedTargetId) {
+      return [];
+    }
+    const cleanSearch = removeDiacritics(searchTerm);
+    return allPersons
+      .filter((p) => {
+        const nameClean = removeDiacritics(p.full_name);
+        const aliasClean = p.other_names ? removeDiacritics(p.other_names) : "";
+        return nameClean.includes(cleanSearch) || aliasClean.includes(cleanSearch);
+      })
+      .slice(0, 5);
+  }, [searchTerm, allPersons, selectedTargetId]);
+
+  // Get recent members sorted by created_at desc
+  const recentMembers = useMemo(() => {
+    return [...allPersons]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 10);
+  }, [allPersons]);
 
   const handleAddRelationship = async () => {
     if (!selectedTargetId) return;
@@ -911,7 +909,6 @@ export default function RelationshipManager({
                         onClick={() => {
                           setSelectedTargetId(p.id);
                           setSearchTerm(p.full_name);
-                          setSearchResults([]);
                         }}
                         className="px-3 py-2 hover:bg-amber-50 text-sm flex items-center justify-between border-b border-stone-100 last:border-0"
                       >

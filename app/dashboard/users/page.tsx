@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
   // Fetch users and persons in parallel
   const [{ data: users, error }, { data: personsData }] = await Promise.all([
     supabase.rpc("get_admin_users"),
-    supabase.from("persons").select("id, full_name").order("full_name"),
+    supabase.from("persons").select("id, full_name, other_names").order("full_name"),
   ]);
 
   if (error) {
@@ -24,7 +24,7 @@ export default async function AdminUsersPage() {
   }
 
   const typedUsers = (users as AdminUserData[]) || [];
-  const persons = (personsData as Pick<Person, "id" | "full_name">[]) || [];
+  const persons = (personsData as Pick<Person, "id" | "full_name" | "other_names">[]) || [];
 
   return (
     <main className="flex-1 overflow-auto bg-stone-50/50 flex flex-col pt-8 relative w-full">

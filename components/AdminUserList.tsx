@@ -13,18 +13,19 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { removeDiacritics } from "@/utils/stringHelpers";
 
 interface AdminUserListProps {
   initialUsers: AdminUserData[];
   currentUserId: string;
-  persons: { id: string; full_name: string }[];
+  persons: { id: string; full_name: string; other_names?: string | null }[];
 }
 
 interface PersonSearchSelectorProps {
   userId: string;
   currentPersonId: string | null;
   currentPersonName: string | null;
-  persons: { id: string; full_name: string }[];
+  persons: { id: string; full_name: string; other_names?: string | null }[];
   onChange: (userId: string, personId: string | null) => void;
   disabled?: boolean;
 }
@@ -78,9 +79,12 @@ function PersonSearchSelector({
     };
   }, [isOpen]);
 
-  const filteredPersons = persons.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredPersons = persons.filter((p) => {
+    const term = removeDiacritics(search);
+    const nameClean = removeDiacritics(p.full_name);
+    const aliasClean = p.other_names ? removeDiacritics(p.other_names) : "";
+    return nameClean.includes(term) || aliasClean.includes(term);
+  });
 
   return (
     <>
