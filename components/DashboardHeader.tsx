@@ -12,7 +12,7 @@ export default function DashboardHeader() {
             href="/dashboard"
             className="group flex items-center gap-2 sm:gap-3"
           >
-            <div className="relative size-8 rounded-xl overflow-hidden shrink-0 transition-all animate-rainbow-glow">
+            <div className="relative size-8 rounded-xl overflow-hidden shrink-0 transition-all">
               <Image
                 src="/icon.png"
                 alt="Logo"

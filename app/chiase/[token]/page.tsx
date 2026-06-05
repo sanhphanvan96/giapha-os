@@ -32,7 +32,7 @@ export default async function PublicSharePage({ params }: PageProps) {
         <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600 animate-rainbow-glow">
+              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600">
                 <Network className="size-5" />
               </div>
               <h1 className="text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
@@ -118,7 +118,7 @@ export default async function PublicSharePage({ params }: PageProps) {
         <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600 animate-rainbow-glow">
+              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600">
                 <Network className="size-5" />
               </div>
               <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5 truncate max-w-[130px] min-[400px]:max-w-[180px] sm:max-w-none shrink-0">
