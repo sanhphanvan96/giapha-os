@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## MCP Tools
+
+Two MCP servers are active. Prefer them over built-in tools when applicable — they are faster and cheaper.
+
+**Serena** — semantic, symbol-aware code navigation. Call `initial_instructions` before any coding task.
+- `find_symbol` / `get_symbols_overview` → understand structure without reading whole files
+- `find_referencing_symbols` / `find_implementations` → replace `grep -rn` for symbols
+- `get_diagnostics_for_file` → quick TypeScript check without running `bun build`
+- `find_declaration` → jump to where a type/function is defined
+
+**fast-filesystem** — text/pattern-based file operations, complements Serena.
+- `fast_read_multiple_files` → read many files in one call (vs N `Read` calls)
+- `fast_search_code` → code search without Bash
+- `fast_get_directory_tree` → explore directory structure
+- `fast_edit_multiple_blocks` → apply multiple edits in one file in a single call
+- `fast_extract_lines` → read exact line ranges efficiently
+
 ## Commands
 
 ```bash
