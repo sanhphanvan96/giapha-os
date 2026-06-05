@@ -108,3 +108,19 @@ select {
 .label-md {
   @apply font-sans text-[12px] font-medium leading-[1];
 }
+
+@keyframes ripple-gentle {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@utility animate-ripple-gentle {
+  animation: ripple-gentle 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
