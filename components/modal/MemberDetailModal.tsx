@@ -6,7 +6,7 @@ const MemberDetailContent = dynamic(() => import("@/context/MemberDetailContent"
 const MemberForm = dynamic(() => import("@/components/MemberForm"), { ssr: false });
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Edit2, ExternalLink, Loader2, UserCheck, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Edit2, Eye, ExternalLink, Loader2, UserCheck, UserMinus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -296,7 +296,7 @@ export default function MemberDetailModal() {
                       className="btn-amber text-sm"
                       title="Xem cây gia phả với tư cách người này"
                     >
-                      <UserCheck className="size-4" />
+                      <Eye className="size-4" />
                       <span className="hidden sm:inline">Xem với tư cách</span>
                     </button>
                     {/* "Đây là tôi" / "Bỏ liên kết" */}
@@ -308,7 +308,7 @@ export default function MemberDetailModal() {
                           className="btn-amber text-sm opacity-80"
                           title="Bỏ liên kết tài khoản với người này"
                         >
-                          <UserCheck className="size-4" />
+                          <UserMinus className="size-4" />
                           <span className="hidden sm:inline">Bỏ liên kết</span>
                         </button>
                       ) : (
