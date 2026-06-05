@@ -220,15 +220,19 @@ export default function MemberDetailModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6"
         >
-          {/* Click-away backdrop (disabled while editing/creating to avoid accidental close) */}
-          {!isEditing && !showCreateMember && (
-            <div
-              className="absolute inset-0 cursor-pointer"
-              onClick={closeModal}
-            />
-          )}
+          {/* Lớp nền tách riêng để vùng cuộn của modal được composite trên GPU
+              (backdrop-filter trên ancestor sẽ chặn composited scrolling → giật khi cuộn lần đầu).
+              Gộp luôn click-away: chỉ đóng khi không ở chế độ chỉnh sửa/thêm mới. */}
+          <div
+            className={`absolute inset-0 bg-stone-900/40 backdrop-blur-sm ${
+              !isEditing && !showCreateMember ? "cursor-pointer" : ""
+            }`}
+            onClick={
+              !isEditing && !showCreateMember ? closeModal : undefined
+            }
+          />
 
           {/* Modal Content */}
           <motion.div
