@@ -14,9 +14,6 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Lấy gốc URL
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-
   const fetchLinks = async () => {
     const result = await getShareLinks();
     if ("links" in result && Array.isArray(result.links)) {
@@ -25,7 +22,7 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
   };
 
   const handleCopy = async (token: string) => {
-    const fullUrl = `${origin}/chiase/${token}`;
+    const fullUrl = `${window.location.origin}/chiase/${token}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
       setCopiedToken(token);
@@ -87,7 +84,7 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                 </tr>
               ) : (
                 links.map((link) => {
-                  const fullUrl = `${origin}/chiase/${link.token}`;
+                  const sharePath = `/chiase/${link.token}`;
                   const isExpired = new Date(link.expires_at) < new Date();
                   const settings = link.settings || {};
 
@@ -97,7 +94,7 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                         <div className="flex items-center gap-2">
                           <LinkIcon className="size-3.5 text-stone-400 shrink-0" />
                           <a
-                            href={fullUrl}
+                            href={sharePath}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:underline hover:text-amber-700"
