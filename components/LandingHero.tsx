@@ -56,9 +56,41 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
           </motion.div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-serif font-bold text-stone-900 tracking-tight leading-[1.1] max-w-4xl">
-            <span className="block">{siteName}</span>
-          </h1>
+          <motion.h1
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                },
+              },
+            }}
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-serif font-bold tracking-tight leading-[1.15] max-w-4xl select-none"
+          >
+            <span className="block bg-rainbow-gradient bg-clip-text text-transparent pb-2 animate-gradient-flow">
+              {siteName.split(" ").map((word, i) => (
+                <motion.span
+                  key={i}
+                  className="inline-block mr-[0.2em] last:mr-0"
+                  variants={{
+                    hidden: { opacity: 0, y: 25, scale: 0.96 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: {
+                        duration: 0.6,
+                        ease: [0.215, 0.61, 0.355, 1],
+                      },
+                    },
+                  }}
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </span>
+          </motion.h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-stone-600 max-w-2xl mx-auto leading-relaxed font-light">
             Gìn giữ và lưu truyền những giá trị, cội nguồn và truyền thống tốt
