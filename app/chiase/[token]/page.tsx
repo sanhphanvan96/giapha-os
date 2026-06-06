@@ -6,8 +6,13 @@ import { ViewMode } from "@/components/ViewToggle";
 import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/server";
 import { AlertCircle, ArrowLeft, Clock, Eye, Network } from "lucide-react";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -31,17 +36,17 @@ export default async function PublicSharePage({ params }: PageProps) {
       <div className="min-h-screen bg-neutral text-primary flex flex-col font-sans">
         <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600">
                 <Network className="size-5" />
               </div>
               <h1 className="text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
                 {config.siteName}
               </h1>
-            </div>
+            </Link>
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center px-4 rounded-xl text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors"
+              className="hidden sm:inline-flex h-9 items-center justify-center px-4 rounded-xl text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors"
             >
               Đăng nhập
             </Link>
@@ -117,20 +122,22 @@ export default async function PublicSharePage({ params }: PageProps) {
         {/* Header dành cho khách xem công khai */}
         <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft transition-all duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600">
-                <Network className="size-5" />
-              </div>
-              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5 truncate max-w-[130px] min-[400px]:max-w-[180px] sm:max-w-none shrink-0">
-                {config.siteName}
-              </h1>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-stone-100 border border-stone-200 text-stone-600">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+              <Link href="/" className="flex items-center gap-2 shrink-0">
+                <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-blue-600">
+                  <Network className="size-5" />
+                </div>
+                <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5 truncate max-w-[110px] min-[360px]:max-w-[150px] sm:max-w-none">
+                  {config.siteName}
+                </h1>
+              </Link>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-100 border border-stone-200 text-stone-600 whitespace-nowrap">
                   <Eye className="size-3 shrink-0" />
-                  <span>Chỉ xem</span>
+                  <span className="hidden min-[360px]:inline">Chỉ xem</span>
                 </span>
                 {expiryLabel && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-amber-50 border border-amber-200 text-amber-700">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 border border-amber-200 text-amber-700 whitespace-nowrap">
                     <Clock className="size-3 shrink-0" />
                     <span>{expiryLabel}</span>
                   </span>
