@@ -1,6 +1,7 @@
 "use client";
 
 import { computeKinship } from "@/utils/kinshipHelpers";
+import { removeDiacritics } from "@/utils/stringHelpers";
 import { getAvatarBg } from "@/utils/styleHelprs";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -70,7 +71,7 @@ function PersonSelector({
         .filter(
           (p) =>
             p.id !== disabledId &&
-            p.full_name.toLowerCase().includes(search.toLowerCase()),
+            removeDiacritics(p.full_name).includes(removeDiacritics(search)),
         )
         .slice(0, 20),
     [persons, disabledId, search],
@@ -485,8 +486,7 @@ export default function KinshipFinder({ persons, relationships }: Props) {
             )}
 
             {/* Disclaimer for ambiguous terms */}
-            {(result.aCallsB.includes("/") ||
-              result.aCallsB.includes("họ hàng")) && (
+            {result.distance >= 2 && (
                 <p className="text-xs text-stone-400 italic px-1">
                   * Danh xưng chính xác dựa trên giới tính, thứ tự sinh của các
                   nhánh và vế Nội/Ngoại.

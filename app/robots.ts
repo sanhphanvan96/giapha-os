@@ -8,7 +8,9 @@ export default function robots(): MetadataRoute.Robots {
     };
   }
   return {
-    rules: { userAgent: "*", allow: "/" },
+    rules: [
+      { userAgent: "*", allow: "/", disallow: "/chiase/" },
+    ],
     sitemap: `${config.siteUrl}/sitemap.xml`,
   };
 }

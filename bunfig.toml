@@ -1,0 +1,3 @@
+[test]
+# Chỉ chạy *.test.ts — các file *.test.tsx dành cho Vitest (jsdom)
+pathIgnorePatterns = ["**/*.test.tsx"]

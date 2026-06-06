@@ -26,9 +26,28 @@ bun install        # install dependencies
 bun run dev        # start dev server at localhost:3000
 bun run build      # production build
 bun run lint       # run eslint
+bun test           # chạy unit tests (logic/utils/server actions) — dùng bun:test
+bun run test       # chạy component tests (React/RTL) — dùng Vitest + jsdom
+bun run test:watch # Vitest watch mode khi dev
 ```
 
 This project uses **Bun** as the package manager. Do not use npm or yarn.
+
+## Testing
+
+Hai test runner song song, **không được trộn lẫn**:
+
+| Runner | Command | File pattern | Dùng cho |
+|---|---|---|---|
+| `bun:test` | `bun test` | `*.test.ts` | Pure logic, utils, server actions |
+| Vitest + RTL | `bun run test` | `*.test.tsx` | React components, jsdom |
+
+**Quy tắc khi viết test mới:**
+- Test logic thuần (helpers, actions) → đặt file `*.test.ts`, dùng `import { describe, it, expect } from "bun:test"`
+- Test React component → đặt file `*.test.tsx`, dùng `import { describe, it, expect, vi } from "vitest"` + `@testing-library/react`
+- Không đặt JSX trong `*.test.ts` và không dùng `bun:test` trong `*.test.tsx`
+
+Config phân tách: `bunfig.toml` dùng `pathIgnorePatterns` để bun bỏ qua `*.test.tsx`; `vitest.config.ts` dùng `include: ["**/*.test.tsx"]` để Vitest bỏ qua `*.test.ts`.
 
 ## Git
 
