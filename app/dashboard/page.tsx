@@ -47,7 +47,7 @@ export default async function DashboardLaunchpad() {
     supabase
       .from("persons")
       .select(
-        "id, full_name, gender, generation, is_in_law, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type",
+        "id, full_name, gender, generation, is_in_law, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, anniversary_lunar_year, anniversary_lunar_month, anniversary_lunar_day, is_deceased, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type",
       ),
     supabase
       .from("custom_events")

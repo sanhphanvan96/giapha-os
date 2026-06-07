@@ -31,6 +31,9 @@ interface PersonExport {
   death_lunar_year: number | null;
   death_lunar_month: number | null;
   death_lunar_day: number | null;
+  anniversary_lunar_year: number | null;
+  anniversary_lunar_month: number | null;
+  anniversary_lunar_day: number | null;
   is_deceased: boolean;
   is_in_law: boolean;
   birth_order: number | null;
@@ -104,6 +107,9 @@ function sanitizePerson(
     death_lunar_year: p.death_lunar_year ?? null,
     death_lunar_month: p.death_lunar_month ?? null,
     death_lunar_day: p.death_lunar_day ?? null,
+    anniversary_lunar_year: p.anniversary_lunar_year ?? null,
+    anniversary_lunar_month: p.anniversary_lunar_month ?? null,
+    anniversary_lunar_day: p.anniversary_lunar_day ?? null,
     is_deceased: p.is_deceased ?? false,
     is_in_law: p.is_in_law ?? false,
     birth_order: p.birth_order ?? null,
@@ -174,7 +180,7 @@ export async function exportData(
   try {
     allPersons = await fetchAll(
       "persons",
-      "id, full_name, gender, birth_year, birth_month, birth_day, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at",
+      "id, full_name, gender, birth_year, birth_month, birth_day, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, birthday_remind_type, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, anniversary_lunar_year, anniversary_lunar_month, anniversary_lunar_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at",
       "created_at"
     );
     allRels = await fetchAll(

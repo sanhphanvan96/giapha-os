@@ -90,6 +90,9 @@ export function computeEvents(
     death_lunar_year: number | null;
     death_lunar_month: number | null;
     death_lunar_day: number | null;
+    anniversary_lunar_year?: number | null;
+    anniversary_lunar_month?: number | null;
+    anniversary_lunar_day?: number | null;
     is_deceased: boolean;
     birth_lunar_year?: number | null;
     birth_lunar_month?: number | null;
@@ -235,8 +238,11 @@ export function computeEvents(
         let lMonth: number;
         let lDay: number;
         
-        // Prefer exact lunar date from DB
-        if (p.death_lunar_month && p.death_lunar_day) {
+        // Prefer custom anniversary date, then exact lunar death date, then convert solar
+        if (p.anniversary_lunar_month && p.anniversary_lunar_day) {
+          lMonth = p.anniversary_lunar_month;
+          lDay = p.anniversary_lunar_day;
+        } else if (p.death_lunar_month && p.death_lunar_day) {
           lMonth = p.death_lunar_month;
           lDay = p.death_lunar_day;
         } else {

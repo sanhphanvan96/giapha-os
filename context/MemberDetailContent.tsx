@@ -347,6 +347,19 @@ export default function MemberDetailContent({
                             ) || "Chưa rõ"}
                         </p>
                       )}
+                    {(person.anniversary_lunar_month && person.anniversary_lunar_day) && (
+                      <p className="text-xs font-medium text-stone-400 flex items-center gap-1.5 pt-1.5 border-t border-stone-100">
+                        <span className="text-[10px] border border-stone-200/60 bg-stone-50/80 rounded px-1 py-0.5">
+                          Ngày giỗ
+                        </span>
+                        {formatDisplayDate(
+                          person.anniversary_lunar_year,
+                          person.anniversary_lunar_month,
+                          person.anniversary_lunar_day,
+                        )}
+                        <span className="text-[10px] text-stone-400">ÂL</span>
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               )}

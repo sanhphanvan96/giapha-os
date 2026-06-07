@@ -49,6 +49,9 @@ export interface Person {
   death_lunar_year: number | null;
   death_lunar_month: number | null;
   death_lunar_day: number | null;
+  anniversary_lunar_year: number | null;
+  anniversary_lunar_month: number | null;
+  anniversary_lunar_day: number | null;
 
   birth_lunar_year: number | null;
   birth_lunar_month: number | null;
