@@ -1,9 +1,9 @@
 "use client";
 
 import { GalleryItem } from "@/types";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, CalendarDays, Maximize2, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, CalendarDays, Maximize2, ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
 import dayjs from "dayjs";
 
 import { createClient } from "@/utils/supabase/client";
@@ -29,6 +29,14 @@ export default function GalleryGrid({
   const selectedItem = selectedIndex !== null ? items[selectedIndex] : null;
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Zoom & pan state
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const imgContainerRef = useRef<HTMLDivElement>(null);
+  // Ref to read current zoom state inside event handlers without stale closure
+  const zoomStateRef = useRef({ scale: 1, pan: { x: 0, y: 0 } });
+  zoomStateRef.current = { scale, pan };
+
   const handleClose = useCallback(() => setSelectedIndex(null), []);
 
   const handlePrev = useCallback(() => {
@@ -39,6 +47,22 @@ export default function GalleryGrid({
     setSelectedIndex((i) => (i !== null && i < items.length - 1 ? i + 1 : i));
   }, [items.length]);
 
+  const zoomIn = useCallback(() => setScale((s) => Math.min(4, +(s + 0.5).toFixed(1))), []);
+  const zoomOut = useCallback(() => {
+    setScale((s) => {
+      const next = Math.max(1, +(s - 0.5).toFixed(1));
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  }, []);
+
+  // Reset zoom when switching photos
+  useEffect(() => {
+    setScale(1);
+    setPan({ x: 0, y: 0 });
+  }, [selectedIndex]);
+
+  // Keyboard navigation
   useEffect(() => {
     if (selectedIndex === null) return;
     const onKey = (e: KeyboardEvent) => {
@@ -50,12 +74,135 @@ export default function GalleryGrid({
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedIndex, handleClose, handlePrev, handleNext]);
 
+  // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = selectedIndex !== null ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [selectedIndex]);
+
+  // Imperative event listeners for zoom + pan (wheel, pinch, drag, double-tap)
+  useEffect(() => {
+    const container = imgContainerRef.current;
+    if (!container || selectedItem === null) return;
+
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+    let lastTap = 0;
+
+    const getDistance = (t1: Touch, t2: Touch) => {
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const clampScale = (s: number) => Math.min(4, Math.max(1, s));
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setScale((s) => {
+        const next = clampScale(+(s * (1 - e.deltaY * 0.002)).toFixed(2));
+        if (next === 1) setPan({ x: 0, y: 0 });
+        return next;
+      });
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (zoomStateRef.current.scale <= 1) return;
+      isDragging = true;
+      dragStart = {
+        x: e.clientX - zoomStateRef.current.pan.x,
+        y: e.clientY - zoomStateRef.current.pan.y,
+      };
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    const onDblClick = () => {
+      const { scale: s } = zoomStateRef.current;
+      if (s > 1) {
+        setScale(1);
+        setPan({ x: 0, y: 0 });
+      } else {
+        setScale(2);
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        pinchStartDist = getDistance(e.touches[0], e.touches[1]);
+        pinchStartScale = zoomStateRef.current.scale;
+      } else if (e.touches.length === 1) {
+        dragStart = {
+          x: e.touches[0].clientX - zoomStateRef.current.pan.x,
+          y: e.touches[0].clientY - zoomStateRef.current.pan.y,
+        };
+        // Double-tap detection
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          const { scale: s } = zoomStateRef.current;
+          if (s > 1) {
+            setScale(1);
+            setPan({ x: 0, y: 0 });
+          } else {
+            setScale(2);
+          }
+        }
+        lastTap = now;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        const next = clampScale(pinchStartScale * (dist / pinchStartDist));
+        setScale(next);
+        if (next === 1) setPan({ x: 0, y: 0 });
+      } else if (e.touches.length === 1 && zoomStateRef.current.scale > 1) {
+        e.preventDefault();
+        setPan({
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y,
+        });
+      }
+    };
+
+    const onTouchEnd = () => {
+      pinchStartDist = 0;
+    };
+
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    container.addEventListener("dblclick", onDblClick);
+    container.addEventListener("touchstart", onTouchStart, { passive: false });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      container.removeEventListener("dblclick", onDblClick);
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [selectedItem]);
 
   const handleDelete = async (item: GalleryItem) => {
     if (!confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) return;
@@ -176,7 +323,11 @@ export default function GalleryGrid({
             <div className="flex flex-col lg:flex-row w-full h-full lg:h-auto lg:max-w-6xl lg:max-h-[90vh] lg:rounded-2xl bg-stone-950 lg:overflow-hidden lg:shadow-2xl pt-12 lg:pt-0">
 
               {/* Image area */}
-              <div className="flex-1 min-h-0 relative flex items-center justify-center bg-black/50 p-2 lg:p-6">
+              <div
+                ref={imgContainerRef}
+                className={`flex-1 min-h-0 relative flex items-center justify-center bg-black/50 overflow-hidden select-none ${scale > 1 ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
+              >
+                {/* Prev button */}
                 {items.length > 1 && (
                   <button
                     onClick={handlePrev}
@@ -192,8 +343,15 @@ export default function GalleryGrid({
                   src={selectedItem.image_url}
                   alt={selectedItem.title}
                   className="max-w-full max-h-full object-contain lg:rounded-lg"
+                  style={{
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                    transition: "transform 0.05s ease",
+                    touchAction: "none",
+                  }}
+                  draggable={false}
                 />
 
+                {/* Next button */}
                 {items.length > 1 && (
                   <button
                     onClick={handleNext}
@@ -204,6 +362,29 @@ export default function GalleryGrid({
                     <ChevronRight className="size-5" />
                   </button>
                 )}
+
+                {/* Zoom controls */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+                  <button
+                    onClick={zoomOut}
+                    disabled={scale <= 1}
+                    className="size-7 flex items-center justify-center text-white disabled:opacity-30 hover:text-stone-200 transition-colors"
+                    aria-label="Thu nhỏ"
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <span className="text-white/70 text-xs font-medium tabular-nums w-10 text-center">
+                    {Math.round(scale * 100)}%
+                  </span>
+                  <button
+                    onClick={zoomIn}
+                    disabled={scale >= 4}
+                    className="size-7 flex items-center justify-center text-white disabled:opacity-30 hover:text-stone-200 transition-colors"
+                    aria-label="Phóng to"
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Info panel */}
