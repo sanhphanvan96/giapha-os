@@ -1,8 +1,12 @@
 import Footer from "@/components/Footer";
 import LandingHero from "@/components/LandingHero";
+import { getUser } from "@/utils/supabase/queries";
+import { redirect } from "next/navigation";
 import config from "./config";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getUser();
+  if (user) redirect("/dashboard");
   return (
     <div className="min-h-screen bg-neutral flex flex-col selection:bg-amber-200 selection:text-amber-900 relative overflow-hidden">
       {/* Decorative background grid and blurs */}
