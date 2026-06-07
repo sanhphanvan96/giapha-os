@@ -18,6 +18,8 @@ export interface FamilyEvent {
   originDay?: number | null;
   /** Whether the person is deceased */
   isDeceased: boolean;
+  /** Whether originDay/originMonth are lunar calendar values */
+  isLunar?: boolean;
   /** Optional location for the event */
   location?: string | null;
   /** Optional content/description for the event */
@@ -150,6 +152,7 @@ export function computeEvents(
             originMonth: bMonth,
             originDay: bDay,
             isDeceased: p.is_deceased,
+            isLunar: true,
           };
           events.push(baseEvent);
 

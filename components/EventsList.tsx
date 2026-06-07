@@ -1,6 +1,7 @@
 "use client";
 
 import { getZodiacSign } from "@/utils/dateHelpers";
+import { Lunar } from "lunar-javascript";
 import {
   computeEvents,
   CustomEventRecord,
@@ -54,6 +55,20 @@ const DAY_LABELS: Record<string, string> = {
   "0": "Hôm nay",
   "1": "Ngày mai",
 };
+
+function getZodiacSignForEvent(event: FamilyEvent): string | null {
+  const { originDay, originMonth, originYear, isLunar } = event;
+  if (!originDay || !originMonth) return null;
+  if (!isLunar) return getZodiacSign(originDay, originMonth);
+  if (!originYear) return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const solar = (Lunar as any).fromYmd(originYear, originMonth, originDay).getSolar();
+    return getZodiacSign(solar.getDay(), solar.getMonth());
+  } catch {
+    return null;
+  }
+}
 
 function daysUntilLabel(days: number): string {
   if (days.toString() in DAY_LABELS) return DAY_LABELS[days.toString()];
@@ -190,11 +205,9 @@ function EventCard({
             {event.personName}
           </p>
           {isBirthday &&
-            event.originDay &&
-            event.originMonth &&
-            getZodiacSign(event.originDay, event.originMonth) && (
+            getZodiacSignForEvent(event) && (
               <span className="shrink-0 text-[10px] font-sans font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
-                {getZodiacSign(event.originDay, event.originMonth)}
+                {getZodiacSignForEvent(event)}
               </span>
             )}
           {/* Days badge — inline with name */}
