@@ -109,6 +109,19 @@ export default function MemberForm({
     initialData?.death_lunar_day || "",
   );
 
+  const [hasDifferentAnniversary, setHasDifferentAnniversary] = useState<boolean>(
+    !!(initialData?.anniversary_lunar_month && initialData?.anniversary_lunar_day),
+  );
+  const [anniversaryLunarYear, setAnniversaryLunarYear] = useState<number | "">(
+    initialData?.anniversary_lunar_year || "",
+  );
+  const [anniversaryLunarMonth, setAnniversaryLunarMonth] = useState<number | "">(
+    initialData?.anniversary_lunar_month || "",
+  );
+  const [anniversaryLunarDay, setAnniversaryLunarDay] = useState<number | "">(
+    initialData?.anniversary_lunar_day || "",
+  );
+
   const [isDeceased, setIsDeceased] = useState<boolean>(
     initialData?.is_deceased || false,
   );
@@ -312,6 +325,10 @@ export default function MemberForm({
     deathLunarYear !== (initialData?.death_lunar_year || "") ||
     deathLunarMonth !== (initialData?.death_lunar_month || "") ||
     deathLunarDay !== (initialData?.death_lunar_day || "") ||
+    hasDifferentAnniversary !== !!(initialData?.anniversary_lunar_month && initialData?.anniversary_lunar_day) ||
+    anniversaryLunarYear !== (initialData?.anniversary_lunar_year || "") ||
+    anniversaryLunarMonth !== (initialData?.anniversary_lunar_month || "") ||
+    anniversaryLunarDay !== (initialData?.anniversary_lunar_day || "") ||
     phoneNumber !== (initialData?.phone_number || "") ||
     occupation !== (initialData?.occupation || "") ||
     currentResidence !== (initialData?.current_residence || "") ||
@@ -477,6 +494,9 @@ export default function MemberForm({
           isDeceased && finalDeathLunarDay !== ""
             ? Number(finalDeathLunarDay)
             : null,
+        anniversary_lunar_year: isDeceased && hasDifferentAnniversary && anniversaryLunarYear !== "" ? Number(anniversaryLunarYear) : null,
+        anniversary_lunar_month: isDeceased && hasDifferentAnniversary && anniversaryLunarMonth !== "" ? Number(anniversaryLunarMonth) : null,
+        anniversary_lunar_day: isDeceased && hasDifferentAnniversary && anniversaryLunarDay !== "" ? Number(anniversaryLunarDay) : null,
         is_deceased: isDeceased,
         is_in_law: isInLaw,
         birth_order: birthOrder === "" ? null : Number(birthOrder),
@@ -1108,6 +1128,10 @@ export default function MemberForm({
                         setDeathLunarYear("");
                         setDeathLunarMonth("");
                         setDeathLunarDay("");
+                        setHasDifferentAnniversary(false);
+                        setAnniversaryLunarYear("");
+                        setAnniversaryLunarMonth("");
+                        setAnniversaryLunarDay("");
                       }
                     }}
                     className="peer sr-only"
@@ -1233,6 +1257,99 @@ export default function MemberForm({
                       </div>
                     </div>
                   </div>
+
+                  {/* Checkbox ngày giỗ khác ngày mất */}
+                  <div className="pt-2 border-t border-stone-200/50">
+                    <label className="flex items-center gap-3 group cursor-pointer">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={hasDifferentAnniversary}
+                          onChange={(e) => {
+                            setHasDifferentAnniversary(e.target.checked);
+                            if (!e.target.checked) {
+                              setAnniversaryLunarYear("");
+                              setAnniversaryLunarMonth("");
+                              setAnniversaryLunarDay("");
+                            }
+                          }}
+                          className="peer sr-only"
+                        />
+                        <div className="size-5 border-2 border-stone-300 rounded peer-checked:bg-stone-600 peer-checked:border-stone-600 transition-colors flex items-center justify-center">
+                          <motion.svg
+                            initial={false}
+                            animate={{
+                              opacity: hasDifferentAnniversary ? 1 : 0,
+                              scale: hasDifferentAnniversary ? 1 : 0.5,
+                            }}
+                            className="size-3 text-white pointer-events-none"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={4}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </motion.svg>
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold text-stone-600 group-hover:text-stone-800 transition-colors">
+                        Ngày giỗ khác ngày mất (gia đình cúng giỗ khác ngày thực tế)
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Form nhập ngày giỗ tùy chọn */}
+                  <AnimatePresence initial={false}>
+                    {hasDifferentAnniversary && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        className="overflow-hidden space-y-2 pt-2 border-t border-stone-200/50"
+                      >
+                        <label className="block text-xs font-semibold text-stone-600">
+                          Ngày giỗ (Âm lịch)
+                        </label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <input
+                            type="number"
+                            placeholder="Ngày"
+                            min="1"
+                            max="30"
+                            value={anniversaryLunarDay}
+                            onChange={(e) =>
+                              setAnniversaryLunarDay(e.target.value ? Number(e.target.value) : "")
+                            }
+                            className={inputClasses}
+                          />
+                          <input
+                            type="number"
+                            placeholder="Tháng"
+                            min="1"
+                            max="12"
+                            value={anniversaryLunarMonth}
+                            onChange={(e) =>
+                              setAnniversaryLunarMonth(e.target.value ? Number(e.target.value) : "")
+                            }
+                            className={inputClasses}
+                          />
+                          <input
+                            type="number"
+                            placeholder="Năm"
+                            value={anniversaryLunarYear}
+                            onChange={(e) =>
+                              setAnniversaryLunarYear(e.target.value ? Number(e.target.value) : "")
+                            }
+                            className={inputClasses}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>

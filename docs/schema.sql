@@ -73,7 +73,10 @@ CREATE TABLE IF NOT EXISTS public.persons (
   death_lunar_year INT,
   death_lunar_month INT,
   death_lunar_day INT,
-  
+  anniversary_lunar_year INT,
+  anniversary_lunar_month INT,
+  anniversary_lunar_day INT,
+
   -- Lunar birth date components
   birth_lunar_day INT,
   birth_lunar_month INT,

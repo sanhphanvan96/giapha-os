@@ -25,3 +25,5 @@ NNN-short-slug.md
 | File | Tiêu đề | Trạng thái |
 |------|---------|-----------|
 | [001-bug-fixes.md](./001-bug-fixes.md) | Fix bugs & code issues tìm được qua code review | 🟡 Chưa bắt đầu |
+| [002-ngay-gio-tuy-chon.md](./002-ngay-gio-tuy-chon.md) | Ngày giỗ tùy chọn có thể khác ngày mất + thông báo | 🟡 Chưa bắt đầu |
+| [003-auto-backup.md](./003-auto-backup.md) | Tự động backup hàng ngày — Pi / VPS / Cloudflare (chưa chọn hướng) | 🟡 Chưa bắt đầu |
