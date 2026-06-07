@@ -3,7 +3,22 @@
 import { GalleryItem } from "@/types";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, CalendarDays, Maximize2, ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
+import {
+  X,
+  CalendarDays,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Minus,
+  MoreVertical,
+  Download,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import dayjs from "dayjs";
 
 import { createClient } from "@/utils/supabase/client";
@@ -37,7 +52,18 @@ export default function GalleryGrid({
   const zoomStateRef = useRef({ scale: 1, pan: { x: 0, y: 0 } });
   zoomStateRef.current = { scale, pan };
 
-  const handleClose = useCallback(() => setSelectedIndex(null), []);
+  // Lightbox UI state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [infoExpanded, setInfoExpanded] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = useCallback(() => {
+    setSelectedIndex(null);
+    setMenuOpen(false);
+    setConfirmDeleteOpen(false);
+    setInfoExpanded(false);
+  }, []);
 
   const handlePrev = useCallback(() => {
     setSelectedIndex((i) => (i !== null && i > 0 ? i - 1 : i));
@@ -47,7 +73,10 @@ export default function GalleryGrid({
     setSelectedIndex((i) => (i !== null && i < items.length - 1 ? i + 1 : i));
   }, [items.length]);
 
-  const zoomIn = useCallback(() => setScale((s) => Math.min(4, +(s + 0.5).toFixed(1))), []);
+  const zoomIn = useCallback(
+    () => setScale((s) => Math.min(4, +(s + 0.5).toFixed(1))),
+    []
+  );
   const zoomOut = useCallback(() => {
     setScale((s) => {
       const next = Math.max(1, +(s - 0.5).toFixed(1));
@@ -56,23 +85,36 @@ export default function GalleryGrid({
     });
   }, []);
 
-  // Reset zoom when switching photos
+  // Reset zoom + UI state when switching photos
   useEffect(() => {
     setScale(1);
     setPan({ x: 0, y: 0 });
+    setMenuOpen(false);
+    setConfirmDeleteOpen(false);
+    setInfoExpanded(false);
   }, [selectedIndex]);
 
   // Keyboard navigation
   useEffect(() => {
     if (selectedIndex === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") {
+        if (confirmDeleteOpen) {
+          setConfirmDeleteOpen(false);
+          return;
+        }
+        if (menuOpen) {
+          setMenuOpen(false);
+          return;
+        }
+        handleClose();
+      }
       if (e.key === "ArrowLeft") handlePrev();
       if (e.key === "ArrowRight") handleNext();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedIndex, handleClose, handlePrev, handleNext]);
+  }, [selectedIndex, handleClose, handlePrev, handleNext, confirmDeleteOpen, menuOpen]);
 
   // Body scroll lock
   useEffect(() => {
@@ -81,6 +123,18 @@ export default function GalleryGrid({
       document.body.style.overflow = "unset";
     };
   }, [selectedIndex]);
+
+  // Close dropdown menu when clicking outside
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onOutsideClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onOutsideClick);
+    return () => document.removeEventListener("mousedown", onOutsideClick);
+  }, [menuOpen]);
 
   // Imperative event listeners for zoom + pan (wheel, pinch, drag, double-tap)
   useEffect(() => {
@@ -204,13 +258,40 @@ export default function GalleryGrid({
     };
   }, [selectedItem]);
 
-  const handleDelete = async (item: GalleryItem) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) return;
+  // Download the current image
+  const handleDownload = useCallback(async (item: GalleryItem) => {
+    try {
+      const response = await fetch(item.image_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const ext = item.image_url.split(".").pop()?.split("?")[0] ?? "jpg";
+      a.download = `${item.title}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback: open in new tab
+      window.open(item.image_url, "_blank");
+    }
+  }, []);
+
+  // Open the delete confirmation dialog
+  const handleDelete = useCallback(() => {
+    setMenuOpen(false);
+    setConfirmDeleteOpen(true);
+  }, []);
+
+  // Execute the actual deletion after user confirms
+  const confirmDelete = useCallback(async () => {
+    if (!selectedItem) return;
     setIsDeleting(true);
     try {
       const supabase = createClient();
 
-      const fileName = item.image_url.split("/").pop();
+      const fileName = selectedItem.image_url.split("/").pop();
       if (fileName) {
         await supabase.storage.from("gallery").remove([fileName]);
       }
@@ -218,18 +299,19 @@ export default function GalleryGrid({
       const { error } = await supabase
         .from("gallery_items")
         .delete()
-        .eq("id", item.id);
+        .eq("id", selectedItem.id);
       if (error) throw error;
 
       setSelectedIndex(null);
-      if (onDeleteSuccess) onDeleteSuccess(item.id);
+      setConfirmDeleteOpen(false);
+      if (onDeleteSuccess) onDeleteSuccess(selectedItem.id);
     } catch (err) {
       console.error("Error deleting gallery item", err);
       alert("Đã xảy ra lỗi khi xóa hình ảnh.");
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [selectedItem, onDeleteSuccess]);
 
   if (!items || items.length === 0) {
     return (
@@ -247,6 +329,10 @@ export default function GalleryGrid({
       </div>
     );
   }
+
+  const canEdit =
+    !!selectedItem &&
+    (isAdmin || (isEditor && selectedItem.created_by === user?.id));
 
   return (
     <>
@@ -301,7 +387,7 @@ export default function GalleryGrid({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[60] flex flex-col lg:items-center lg:justify-center bg-black/90 backdrop-blur-sm"
           >
-            {/* Top bar: counter + close */}
+            {/* Top bar: counter + actions + close */}
             <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
               {items.length > 1 ? (
                 <span className="text-white/70 text-sm font-medium tabular-nums">
@@ -310,13 +396,71 @@ export default function GalleryGrid({
               ) : (
                 <span />
               )}
-              <button
-                onClick={handleClose}
-                className="size-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm"
-                aria-label="Đóng"
-              >
-                <X className="size-5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                {/* Download — visible to all roles */}
+                <button
+                  onClick={() => handleDownload(selectedItem)}
+                  className="size-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm"
+                  aria-label="Tải ảnh xuống"
+                >
+                  <Download className="size-5" />
+                </button>
+
+                {/* Kebab menu — editors/admins only */}
+                {canEdit && (
+                  <div className="relative" ref={menuRef}>
+                    <button
+                      onClick={() => setMenuOpen((v) => !v)}
+                      className="size-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm"
+                      aria-label="Tùy chọn"
+                    >
+                      <MoreVertical className="size-5" />
+                    </button>
+
+                    <AnimatePresence>
+                      {menuOpen && (
+                        <motion.div
+                          key="menu"
+                          initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-xl ring-1 ring-stone-100 overflow-hidden py-1 z-30"
+                        >
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
+                              handleClose();
+                              if (onEdit) onEdit(selectedItem);
+                            }}
+                            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-stone-700 hover:bg-stone-50 text-sm font-medium transition-colors"
+                          >
+                            <Pencil className="size-4 text-stone-400" />
+                            Sửa thông tin
+                          </button>
+                          <button
+                            onClick={handleDelete}
+                            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-red-600 hover:bg-red-50 text-sm font-medium transition-colors"
+                          >
+                            <Trash2 className="size-4" />
+                            Xóa ảnh
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* Close */}
+                <button
+                  onClick={handleClose}
+                  className="size-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm"
+                  aria-label="Đóng"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
             </div>
 
             {/* Card: full-screen mobile, centered card on desktop */}
@@ -387,9 +531,63 @@ export default function GalleryGrid({
                 </div>
               </div>
 
-              {/* Info panel */}
-              <div className="w-full lg:w-96 bg-white flex flex-col shrink-0 max-h-[38vh] lg:max-h-none overflow-y-auto">
-                <div className="p-5 lg:p-8 flex-1">
+              {/* Mobile info strip — collapsible bottom bar */}
+              <div className="lg:hidden bg-stone-900/95 backdrop-blur-sm shrink-0">
+                <button
+                  onClick={() => setInfoExpanded((v) => !v)}
+                  className="w-full px-4 py-3 flex items-center gap-3 text-left"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-white font-semibold text-sm leading-tight truncate">
+                      {selectedItem.title}
+                    </h2>
+                    {selectedItem.event_date && (
+                      <p className="text-white/50 text-xs mt-0.5 flex items-center gap-1">
+                        <CalendarDays className="size-3 shrink-0" />
+                        {dayjs(selectedItem.event_date).format("DD/MM/YYYY")}
+                      </p>
+                    )}
+                  </div>
+                  {infoExpanded ? (
+                    <ChevronDown className="size-4 text-white/50 shrink-0" />
+                  ) : (
+                    <ChevronUp className="size-4 text-white/50 shrink-0" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {infoExpanded && (
+                    <motion.div
+                      key="mobile-info"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 border-t border-white/10">
+                        {selectedItem.description ? (
+                          <p className="text-white/70 text-sm leading-relaxed mt-3 whitespace-pre-wrap">
+                            {selectedItem.description}
+                          </p>
+                        ) : (
+                          <p className="text-white/30 italic text-sm mt-3">
+                            Không có nội dung mô tả.
+                          </p>
+                        )}
+                        <p className="text-white/30 text-xs mt-3">
+                          Đã thêm vào{" "}
+                          {dayjs(selectedItem.created_at).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop info panel */}
+              <div className="hidden lg:flex lg:w-96 bg-white flex-col shrink-0 overflow-y-auto">
+                <div className="p-8 flex-1">
                   <h2 className="text-xl font-bold text-stone-800 mb-3 leading-tight">
                     {selectedItem.title}
                   </h2>
@@ -405,7 +603,7 @@ export default function GalleryGrid({
 
                   {selectedItem.description ? (
                     <div className="prose prose-stone text-stone-600">
-                      <p className="whitespace-pre-wrap leading-relaxed text-sm lg:text-base">
+                      <p className="whitespace-pre-wrap leading-relaxed text-base">
                         {selectedItem.description}
                       </p>
                     </div>
@@ -416,36 +614,66 @@ export default function GalleryGrid({
                   )}
                 </div>
 
-                <div className="p-4 lg:p-6 bg-stone-50 border-t border-stone-100 text-xs text-stone-400 font-medium flex justify-between items-center shrink-0">
-                  <span>
-                    Đã thêm vào{" "}
-                    {dayjs(selectedItem.created_at).format("DD/MM/YYYY")}
-                  </span>
-
-                  {(isAdmin ||
-                    (isEditor && selectedItem.created_by === user?.id)) && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          handleClose();
-                          if (onEdit) onEdit(selectedItem);
-                        }}
-                        className="px-4 py-2 bg-stone-100/80 text-stone-700 rounded-lg hover:bg-stone-200 hover:text-stone-900 font-medium text-sm transition-all shadow-sm"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(selectedItem)}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isDeleting ? "Đang xóa..." : "Xóa"}
-                      </button>
-                    </div>
-                  )}
+                <div className="p-6 bg-stone-50 border-t border-stone-100 text-xs text-stone-400 font-medium shrink-0">
+                  Đã thêm vào{" "}
+                  {dayjs(selectedItem.created_at).format("DD/MM/YYYY")}
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation dialog */}
+      <AnimatePresence>
+        {confirmDeleteOpen && selectedItem && (
+          <motion.div
+            key="confirm-delete"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="size-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="size-5 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-stone-900">
+                  Xóa hình ảnh?
+                </h3>
+              </div>
+              <p className="text-stone-500 text-sm mb-6 leading-relaxed">
+                Hình ảnh{" "}
+                <span className="font-medium text-stone-700">
+                  &ldquo;{selectedItem.title}&rdquo;
+                </span>{" "}
+                sẽ bị xóa vĩnh viễn và không thể khôi phục.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isDeleting ? "Đang xóa..." : "Xóa"}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
