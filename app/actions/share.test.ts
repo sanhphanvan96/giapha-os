@@ -28,6 +28,9 @@ mock.module("next/cache", () => ({
   revalidatePath: () => {},
 }));
 
+// Mock RPC results (controllable per test)
+let rpcResult: { data: unknown; error: null | { message: string } } = { data: [], error: null };
+
 // Mock queries
 mock.module("@/utils/supabase/queries", () => ({
   getProfile: async () => {
@@ -63,6 +66,10 @@ mock.module("@/utils/supabase/queries", () => ({
         },
       }),
     }),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    rpc: (..._a: unknown[]) => {
+      return Promise.resolve(rpcResult);
+    },
   }),
 }));
 
@@ -71,6 +78,7 @@ beforeEach(() => {
   insertCalls = [];
   deleteCalls = [];
   queryRole = "admin";
+  rpcResult = { data: [], error: null };
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -162,6 +170,72 @@ describe("Share Server Actions", () => {
       expect(deleteCalls.length).toBe(1);
       expect(deleteCalls[0].table).toBe("shared_links");
       expect(deleteCalls[0].eq).toEqual({ column: "token", value: "giapha-123456" });
+    });
+  });
+
+  describe("getShareViewStats", () => {
+    it("should return stats from RPC", async () => {
+      queryRole = "admin";
+      rpcResult = {
+        data: [{ token: "giapha-abc123", total_views: 5, last_viewed: "2026-06-07T10:00:00Z" }],
+        error: null,
+      };
+      const { getShareViewStats } = await import("./share");
+      const result = await getShareViewStats();
+
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveLength(1);
+      // @ts-expect-error - expected data shape
+      expect(result.data[0].token).toBe("giapha-abc123");
+      // @ts-expect-error - expected data shape
+      expect(result.data[0].total_views).toBe(5);
+    });
+
+    it("should return error when RPC fails", async () => {
+      queryRole = "admin";
+      rpcResult = { data: null, error: { message: "Access denied." } };
+      const { getShareViewStats } = await import("./share");
+      const result = await getShareViewStats();
+
+      expect(result).toHaveProperty("error");
+      expect(result.error).toContain("Access denied");
+    });
+  });
+
+  describe("getShareViews", () => {
+    it("should return view log from RPC", async () => {
+      queryRole = "admin";
+      rpcResult = {
+        data: [
+          {
+            viewed_at: "2026-06-07T10:00:00Z",
+            ip: "113.161.10.1",
+            user_agent: "Mozilla/5.0",
+            city: "Đà Nẵng",
+            referrer: null,
+            device_type: "desktop",
+          },
+        ],
+        error: null,
+      };
+      const { getShareViews } = await import("./share");
+      const result = await getShareViews("giapha-abc123");
+
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveLength(1);
+      // @ts-expect-error - expected data shape
+      expect(result.data[0].city).toBe("Đà Nẵng");
+      // @ts-expect-error - expected data shape
+      expect(result.data[0].device_type).toBe("desktop");
+    });
+
+    it("should return error when RPC denies access", async () => {
+      queryRole = "editor";
+      rpcResult = { data: null, error: { message: "Access denied." } };
+      const { getShareViews } = await import("./share");
+      const result = await getShareViews("giapha-abc123");
+
+      expect(result).toHaveProperty("error");
     });
   });
 });

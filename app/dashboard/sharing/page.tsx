@@ -1,5 +1,5 @@
 import AdminSharingList from "@/components/AdminSharingList";
-import { getShareLinks } from "@/app/actions/share";
+import { getShareLinks, getShareViewStats, ShareViewStat } from "@/app/actions/share";
 import { getProfile } from "@/utils/supabase/queries";
 import { redirect } from "next/navigation";
 
@@ -11,8 +11,20 @@ export default async function AdminSharingPage() {
     redirect("/dashboard");
   }
 
-  const result = await getShareLinks();
-  const initialLinks = ("links" in result && Array.isArray(result.links)) ? result.links : [];
+  const isAdmin = profile?.role === "admin";
+
+  // Fetch song song danh sách link + stats lượt xem (stats chỉ cho admin)
+  const [linksResult, statsResult] = await Promise.all([
+    getShareLinks(),
+    isAdmin ? getShareViewStats() : Promise.resolve({ data: [] as ShareViewStat[] }),
+  ]);
+
+  const initialLinks = ("links" in linksResult && Array.isArray(linksResult.links))
+    ? linksResult.links
+    : [];
+  const viewStats: ShareViewStat[] = ("data" in statsResult && Array.isArray(statsResult.data))
+    ? statsResult.data
+    : [];
 
   return (
     <main className="flex-1 overflow-auto bg-stone-50/50 flex flex-col pt-8 relative w-full">
@@ -76,7 +88,7 @@ export default async function AdminSharingPage() {
         </div>
 
         {/* Table list */}
-        <AdminSharingList initialLinks={initialLinks} />
+        <AdminSharingList initialLinks={initialLinks} viewStats={viewStats} isAdmin={isAdmin} />
       </div>
     </main>
   );

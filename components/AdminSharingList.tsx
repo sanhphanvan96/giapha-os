@@ -1,18 +1,29 @@
 "use client";
 
-import { deleteShareLink, getShareLinks } from "@/app/actions/share";
+import { deleteShareLink, getShareLinks, ShareViewStat } from "@/app/actions/share";
 import ShareTreeModal from "@/components/modal/ShareTreeModal";
-import { Calendar, Check, Copy, ExternalLink, Link as LinkIcon, Plus, Trash2 } from "lucide-react";
+import ShareViewsModal from "@/components/modal/ShareViewsModal";
+import { BarChart2, Calendar, Check, Copy, ExternalLink, Link as LinkIcon, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface AdminSharingListProps {
   initialLinks: any[];
+  viewStats?: ShareViewStat[];
+  isAdmin?: boolean;
 }
 
-export default function AdminSharingList({ initialLinks }: AdminSharingListProps) {
+export default function AdminSharingList({
+  initialLinks,
+  viewStats = [],
+  isAdmin = false,
+}: AdminSharingListProps) {
   const [links, setLinks] = useState<any[]>(initialLinks);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [viewsToken, setViewsToken] = useState<string | null>(null);
+
+  // Map token → stats để tra nhanh O(1)
+  const statsMap = new Map<string, ShareViewStat>(viewStats.map((s) => [s.token, s]));
 
   const fetchLinks = async () => {
     const result = await getShareLinks();
@@ -133,6 +144,19 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                     </div>
                   </div>
 
+                  {/* Lượt xem badge (chỉ admin) */}
+                  {isAdmin && (() => {
+                    const stat = statsMap.get(link.token);
+                    return (
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 border border-blue-200 text-blue-700">
+                          <BarChart2 className="size-3" />
+                          {stat ? `${stat.total_views} lượt xem` : "0 lượt xem"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
                   {/* Actions row */}
                   <div className="flex items-center gap-2 pt-1 border-t border-stone-100">
                     <button
@@ -145,6 +169,15 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                         <><Copy className="size-3.5" /> Sao chép link</>
                       )}
                     </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => setViewsToken(link.token)}
+                        className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-stone-50 hover:bg-blue-50 border border-stone-200 hover:border-blue-200 text-stone-500 hover:text-blue-600 text-xs font-medium transition-colors"
+                        title="Xem lượt truy cập"
+                      >
+                        <BarChart2 className="size-3.5" />
+                      </button>
+                    )}
                     <a
                       href={sharePath}
                       target="_blank"
@@ -176,6 +209,7 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                     <th className="p-4 sm:p-5">Ngày tạo</th>
                     <th className="p-4 sm:p-5">Ngày hết hạn</th>
                     <th className="p-4 sm:p-5">Trạng thái</th>
+                    {isAdmin && <th className="p-4 sm:p-5">Lượt xem</th>}
                     <th className="p-4 sm:p-5 text-right">Thao tác</th>
                   </tr>
                 </thead>
@@ -227,6 +261,21 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
                             </span>
                           )}
                         </td>
+                        {isAdmin && (() => {
+                          const stat = statsMap.get(link.token);
+                          return (
+                            <td className="p-4 sm:p-5 text-xs">
+                              <button
+                                onClick={() => setViewsToken(link.token)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors"
+                                title="Xem nhật ký truy cập"
+                              >
+                                <BarChart2 className="size-3" />
+                                {stat ? stat.total_views : 0}
+                              </button>
+                            </td>
+                          );
+                        })()}
                         <td className="p-4 sm:p-5 text-right">
                           <div className="inline-flex items-center gap-2">
                             <button
@@ -263,6 +312,8 @@ export default function AdminSharingList({ initialLinks }: AdminSharingListProps
         setIsShareModalOpen(false);
         fetchLinks();
       }} />
+
+      <ShareViewsModal token={viewsToken} onClose={() => setViewsToken(null)} />
     </div>
   );
 }

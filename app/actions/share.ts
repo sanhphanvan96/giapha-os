@@ -3,6 +3,21 @@
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
 import { revalidatePath } from "next/cache";
 
+export interface ShareView {
+  viewed_at: string;
+  ip: string | null;
+  user_agent: string | null;
+  city: string | null;
+  referrer: string | null;
+  device_type: string | null;
+}
+
+export interface ShareViewStat {
+  token: string;
+  total_views: number;
+  last_viewed: string | null;
+}
+
 /**
  * Tạo một liên kết chia sẻ mới dạng giapha-xxxxxx
  */
@@ -61,6 +76,42 @@ export async function getShareLinks() {
   }
 
   return { success: true, links: data || [] };
+}
+
+/**
+ * Lấy tổng hợp lượt xem theo từng token (chỉ admin, guard trong RPC)
+ */
+export async function getShareViewStats(): Promise<{ data?: ShareViewStat[]; error?: string }> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.rpc("get_share_view_stats");
+
+  if (error) {
+    console.error("Error fetching share view stats:", error);
+    return { error: error.message };
+  }
+
+  return { data: (data as ShareViewStat[]) || [] };
+}
+
+/**
+ * Lấy nhật ký lượt xem chi tiết của 1 link (chỉ admin, guard trong RPC)
+ */
+export async function getShareViews(
+  token: string,
+  limit = 100
+): Promise<{ data?: ShareView[]; error?: string }> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.rpc("get_share_views", {
+    p_token: token,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("Error fetching share views:", error);
+    return { error: error.message };
+  }
+
+  return { data: (data as ShareView[]) || [] };
 }
 
 /**
