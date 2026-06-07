@@ -5,9 +5,10 @@ import { UserProvider } from "@/components/UserProvider";
 import { ViewMode } from "@/components/ViewToggle";
 import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/server";
+import { getRequestMeta } from "@/utils/shareAnalytics";
 import { AlertCircle, ArrowLeft, Clock, Eye, Network } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -84,6 +85,25 @@ export default async function PublicSharePage({ params }: PageProps) {
         <Footer className="mt-auto bg-white border-t border-stone-200" />
       </div>
     );
+  }
+
+  // Ghi lượt xem — fire-and-forget, không chặn render trang
+  try {
+    const reqHeaders = await headers();
+    const meta = getRequestMeta(reqHeaders);
+    // Không await → không làm chậm trang dù RPC có lỗi
+    supabase.rpc("log_share_view", {
+      p_token: token,
+      p_ip: meta.ip,
+      p_ua: meta.userAgent,
+      p_city: meta.city,
+      p_referrer: meta.referrer,
+      p_device: meta.deviceType,
+    }).then(({ error: logErr }) => {
+      if (logErr) console.warn("[share_view log]", logErr.message);
+    });
+  } catch (err) {
+    console.warn("[share_view log] unexpected error:", err);
   }
 
   // Phân tách dữ liệu trả về từ RPC
