@@ -17,6 +17,47 @@ export function parseDeviceType(ua: string | null): DeviceType {
 }
 
 /**
+ * Xác định nguồn truy cập từ referer header + user agent.
+ *
+ * Lý do cần cả UA: Zalo, Facebook, Instagram… mở link trong in-app browser
+ * và KHÔNG gửi Referer header, nên chỉ nhìn referer sẽ sai là "Trực tiếp".
+ * UA của các app này có chuỗi nhận dạng riêng để phát hiện.
+ */
+export function parseSource(referrer: string | null, userAgent: string | null): string {
+  const ua = userAgent ?? "";
+
+  // Ưu tiên detect in-app browser qua UA (vì chúng không gửi Referer)
+  if (/ZaloApp|Zalo\s*\//i.test(ua)) return "Zalo";
+  if (/FBAN\/|FBAV\/|FB_IAB|FacebookApp/i.test(ua)) return "Facebook";
+  if (/Instagram/i.test(ua)) return "Instagram";
+  if (/\bLine\//i.test(ua)) return "Line";
+  if (/TikTok/i.test(ua)) return "TikTok";
+  if (/Telegram(?:Bot|\/)/i.test(ua)) return "Telegram";
+  if (/\bTwitter\b/i.test(ua)) return "Twitter/X";
+  if (/Viber/i.test(ua)) return "Viber";
+  if (/Pinterest\//i.test(ua)) return "Pinterest";
+  if (/LinkedInApp/i.test(ua)) return "LinkedIn";
+
+  if (!referrer) return "Trực tiếp";
+
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, "");
+    if (/facebook\.com|fb\.com/.test(host)) return "Facebook";
+    if (/zalo\.me/.test(host)) return "Zalo";
+    if (/instagram\.com/.test(host)) return "Instagram";
+    if (/tiktok\.com/.test(host)) return "TikTok";
+    if (/t\.co$|twitter\.com|x\.com/.test(host)) return "Twitter/X";
+    if (/linkedin\.com/.test(host)) return "LinkedIn";
+    if (/youtube\.com|youtu\.be/.test(host)) return "YouTube";
+    if (/google\./.test(host)) return "Google";
+    if (/zalo\.me/.test(host)) return "Zalo";
+    return host;
+  } catch {
+    return referrer.slice(0, 40);
+  }
+}
+
+/**
  * Nhãn hiển thị chi tiết hơn, dùng trong UI (không lưu DB).
  *
  * Ví dụ kết quả:

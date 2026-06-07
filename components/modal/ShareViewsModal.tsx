@@ -1,7 +1,7 @@
 "use client";
 
 import { getShareViews, ShareView } from "@/app/actions/share";
-import { parseDeviceLabel } from "@/utils/shareAnalytics";
+import { parseDeviceLabel, parseSource } from "@/utils/shareAnalytics";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Globe,
@@ -32,15 +32,6 @@ function DeviceIcon({ type }: { type: string | null }) {
   }
 }
 
-function formatReferrer(ref: string | null): string {
-  if (!ref) return "Trực tiếp";
-  try {
-    const url = new URL(ref);
-    return url.hostname.replace(/^www\./, "");
-  } catch {
-    return ref.slice(0, 40);
-  }
-}
 
 export default function ShareViewsModal({ token, onClose }: ShareViewsModalProps) {
   const isOpen = !!token;
@@ -90,7 +81,7 @@ export default function ShareViewsModal({ token, onClose }: ShareViewsModalProps
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 15 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-stone-200 z-10 max-h-[85vh]"
+            className="relative bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col border border-stone-200 z-10 max-h-[85vh]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 shrink-0">
@@ -134,46 +125,40 @@ export default function ShareViewsModal({ token, onClose }: ShareViewsModalProps
               )}
 
               {!loading && !error && views.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[480px]">
-                    <thead className="sticky top-0 z-10 bg-stone-50 border-b border-stone-200">
-                      <tr className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-                        <th className="px-4 py-2.5 whitespace-nowrap">Thời gian</th>
-                        <th className="px-4 py-2.5 whitespace-nowrap">Thiết bị</th>
-                        <th className="px-4 py-2.5 whitespace-nowrap">Thành phố</th>
-                        <th className="px-4 py-2.5 whitespace-nowrap">IP</th>
-                        <th className="px-4 py-2.5 whitespace-nowrap">Nguồn</th>
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 z-10 bg-stone-50 border-b border-stone-200">
+                    <tr className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                      <th className="px-4 py-2.5 w-28">Thời gian</th>
+                      <th className="px-4 py-2.5">Thiết bị &amp; Thành phố</th>
+                      <th className="px-4 py-2.5">IP &amp; Nguồn</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {views.map((v, i) => (
+                      <tr key={i} className="hover:bg-stone-50/60 transition-colors">
+                        <td className="px-4 py-2.5 text-xs font-semibold text-stone-700 tabular-nums align-top whitespace-nowrap">
+                          {new Date(v.viewed_at).toLocaleString("vi-VN", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </td>
+                        <td className="px-4 py-2.5 align-top">
+                          <div className="flex items-center gap-1.5 text-xs text-stone-600 font-medium">
+                            <DeviceIcon type={v.device_type} />
+                            <span>{parseDeviceLabel(v.user_agent)}</span>
+                          </div>
+                          <div className="text-[11px] text-stone-400 mt-0.5 pl-[18px]">
+                            {v.city ?? <span className="italic">Không xác định</span>}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 align-top whitespace-nowrap">
+                          <div className="text-[11px] font-mono text-stone-500">{v.ip || "—"}</div>
+                          <div className="text-[11px] text-stone-400 mt-0.5">{parseSource(v.referrer, v.user_agent)}</div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100">
-                      {views.map((v, i) => (
-                        <tr key={i} className="hover:bg-stone-50/60 transition-colors">
-                          <td className="px-4 py-2.5 text-xs font-semibold text-stone-700 tabular-nums whitespace-nowrap">
-                            {new Date(v.viewed_at).toLocaleString("vi-VN", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <div className="flex items-center gap-1.5 text-xs text-stone-600 font-medium whitespace-nowrap">
-                              <DeviceIcon type={v.device_type} />
-                              <span>{parseDeviceLabel(v.user_agent)}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2.5 text-xs text-stone-500 whitespace-nowrap">
-                            {v.city ?? <span className="text-stone-300">—</span>}
-                          </td>
-                          <td className="px-4 py-2.5 text-[11px] font-mono text-stone-400 whitespace-nowrap">
-                            {v.ip || "—"}
-                          </td>
-                          <td className="px-4 py-2.5 text-xs text-stone-500 whitespace-nowrap">
-                            {formatReferrer(v.referrer)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </motion.div>
