@@ -2,11 +2,12 @@
 
 import { uploadGalleryImage } from "@/utils/supabase/storage";
 import { createClient } from "@/utils/supabase/client";
-import { X, UploadCloud, Loader2 } from "lucide-react";
+import { X, UploadCloud, Loader2, Camera } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { compressImage } from "@/utils/imageCompressor";
 
+import exifr from "exifr";
 import { GalleryItem } from "@/types";
 
 interface UploadModalProps {
@@ -29,6 +30,7 @@ export default function UploadModal({
   const [eventDate, setEventDate] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDateFromExif, setIsDateFromExif] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +56,28 @@ export default function UploadModal({
     };
   }, [isOpen]);
 
+  const applyExifDate = async (f: File) => {
+    try {
+      const exif = await exifr.parse(f, ["DateTimeOriginal", "DateTime"]);
+      const raw: Date | string | undefined =
+        exif?.DateTimeOriginal ?? exif?.DateTime;
+      if (raw) {
+        const d = raw instanceof Date ? raw : new Date(raw);
+        if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          setEventDate(`${yyyy}-${mm}-${dd}`);
+          setIsDateFromExif(true);
+          return;
+        }
+      }
+    } catch {
+      // no EXIF — silently ignore
+    }
+    setIsDateFromExif(false);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected) {
@@ -65,6 +89,7 @@ export default function UploadModal({
       const url = URL.createObjectURL(selected);
       setPreview(url);
       setError(null);
+      applyExifDate(selected);
     }
   };
 
@@ -83,6 +108,7 @@ export default function UploadModal({
       setFile(dropped);
       setPreview(URL.createObjectURL(dropped));
       setError(null);
+      applyExifDate(dropped);
     }
   };
 
@@ -162,6 +188,7 @@ export default function UploadModal({
     setTitle("");
     setDescription("");
     setEventDate("");
+    setIsDateFromExif(false);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -299,15 +326,39 @@ export default function UploadModal({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-                      Ngày diễn ra
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-semibold text-stone-700">
+                        Ngày diễn ra
+                      </label>
+                      {eventDate && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEventDate("");
+                            setIsDateFromExif(false);
+                          }}
+                          className="text-xs text-stone-400 hover:text-rose-500 transition-colors flex items-center gap-1"
+                        >
+                          <X className="size-3" />
+                          Xóa ngày
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="date"
                       value={eventDate}
-                      onChange={(e) => setEventDate(e.target.value)}
+                      onChange={(e) => {
+                        setEventDate(e.target.value);
+                        setIsDateFromExif(false);
+                      }}
                       className={inputClasses}
                     />
+                    {isDateFromExif && eventDate && (
+                      <p className="mt-1.5 flex items-center gap-1 text-xs text-amber-600">
+                        <Camera className="size-3 shrink-0" />
+                        Ngày suy ra từ ảnh
+                      </p>
+                    )}
                   </div>
 
                   <div>
