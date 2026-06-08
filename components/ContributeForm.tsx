@@ -429,7 +429,11 @@ function NewPersonPanel({
 // ── ContributeForm chính ──────────────────────────────────────────────────────
 export default function ContributeForm({ token, context }: Props) {
   const persons: Person[] = (context.persons ?? []) as Person[];
-  const [edits, setEdits] = useState<ContributionEdit[]>([]);
+  const [edits, setEdits] = useState<ContributionEdit[]>(() =>
+    context.allow_edit && persons.length === 1
+      ? [{ person_id: persons[0].id, fields: {} }]
+      : [],
+  );
   const [newPersons, setNewPersons] = useState<ContributionNewPerson[]>([]);
   const [contributorName, setContributorName] = useState("");
   const [contributorNote, setContributorNote] = useState("");
@@ -638,7 +642,7 @@ export default function ContributeForm({ token, context }: Props) {
 
       {/* ── Thông tin người đóng góp ── */}
       <section className="border-t border-stone-100 pt-6 space-y-3">
-        <h3 className="font-semibold text-stone-700">Thông tin của bạn</h3>
+        <h3 className="font-semibold text-stone-700">Thông tin người đóng góp</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-stone-500">
