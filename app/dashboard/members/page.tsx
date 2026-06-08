@@ -23,7 +23,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     supabase
       .from("persons")
       .select(
-        "id, full_name, other_names, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased, is_in_law, birth_order, generation, avatar_url, updated_at",
+        "id, full_name, other_names, gender, birth_year, birth_month, birth_day, birth_lunar_year, birth_lunar_month, birth_lunar_day, legal_birth_year, legal_birth_month, legal_birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, anniversary_lunar_year, anniversary_lunar_month, anniversary_lunar_day, is_deceased, is_in_law, birth_order, generation, avatar_url, note, updated_at",
       )
       .order("generation", { ascending: true, nullsFirst: false })
       .order("birth_year", { ascending: true, nullsFirst: false }),
