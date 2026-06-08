@@ -2,7 +2,7 @@
 
 **Tạo:** 2026-06-07  
 **Cập nhật:** 2026-06-07  
-**Trạng thái:** 🟡 Chưa bắt đầu
+**Trạng thái:** ✅ Hoàn thành (commit `b7f6aac`)
 
 ---
 
@@ -15,10 +15,10 @@ Ngày giỗ (death anniversary) trong phong tục Việt Nam có thể không tr
 ## Việc cần làm
 
 ```
-[ ] 1. Migration — thêm cột anniversary_date vào bảng persons
-[ ] 2. UI form    — tùy chọn nhập ngày giỗ riêng khi thêm/sửa thành viên
-[ ] 3. Hiển thị  — trang chi tiết thành viên hiển thị ngày giỗ nếu có
-[ ] 4. Thông báo — dùng anniversary_date nếu có, fallback về death_date
+[x] 1. Migration — thêm cột anniversary_date vào bảng persons
+[x] 2. UI form    — tùy chọn nhập ngày giỗ riêng khi thêm/sửa thành viên
+[x] 3. Hiển thị  — trang chi tiết thành viên hiển thị ngày giỗ nếu có
+[x] 4. Thông báo — dùng anniversary_date nếu có, fallback về death_date
 ```
 
 ---

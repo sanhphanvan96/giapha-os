@@ -8,6 +8,7 @@ import {
   Database,
   GitMerge,
   Info,
+  Inbox,
   Network,
   Share2,
   UserCircle,
@@ -160,6 +161,15 @@ export default function HeaderMenu() {
                   >
                     <Share2 className="size-4" />
                     Liên kết Chia sẻ
+                  </Link>
+
+                  <Link
+                    href="/dashboard/contributions"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  >
+                    <Inbox className="size-4" />
+                    Duyệt đề xuất
                   </Link>
                 </>
               )}

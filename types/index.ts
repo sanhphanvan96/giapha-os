@@ -88,6 +88,78 @@ export interface PersonWithDetails extends Person {
   parents?: Person[];
 }
 
+// ── Contribution (link đóng góp gia phả) ──────────────────────
+
+export interface ContributionEdit {
+  person_id: string;
+  fields: Partial<Pick<Person,
+    "full_name" | "other_names" | "gender" |
+    "birth_year" | "birth_month" | "birth_day" |
+    "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day" |
+    "death_year" | "death_month" | "death_day" |
+    "death_lunar_year" | "death_lunar_month" | "death_lunar_day" |
+    "anniversary_lunar_year" | "anniversary_lunar_month" | "anniversary_lunar_day" |
+    "is_deceased" | "note"
+  >>;
+}
+
+export interface ContributionNewPerson {
+  tempId: string;
+  fields: Partial<Pick<Person,
+    "full_name" | "other_names" | "gender" |
+    "birth_year" | "birth_month" | "birth_day" |
+    "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day" |
+    "death_year" | "death_month" | "death_day" |
+    "death_lunar_year" | "death_lunar_month" | "death_lunar_day" |
+    "is_deceased" | "note"
+  >>;
+  parent_person_id: string;
+  relation_type: "biological_child" | "adopted_child";
+}
+
+export interface ContributionPayload {
+  edits: ContributionEdit[];
+  new_persons: ContributionNewPerson[];
+}
+
+export interface ContributionLink {
+  id: string;
+  token: string;
+  scope_person_ids: string[];
+  allow_edit: boolean;
+  allow_add: boolean;
+  note: string | null;
+  expires_at: string;
+  revoked: boolean;
+  created_at: string;
+  submission_count: number;
+}
+
+export interface PendingContribution {
+  id: string;
+  link_id: string;
+  contributor_name: string;
+  contributor_note: string | null;
+  payload: ContributionPayload;
+  status: "pending" | "approved" | "rejected";
+  review_note: string | null;
+  created_at: string;
+  link_note: string | null;
+  scope_person_ids: string[];
+}
+
+export interface ContributionContext {
+  valid: boolean;
+  reason?: "not_found" | "revoked" | "expired";
+  allow_edit?: boolean;
+  allow_add?: boolean;
+  note?: string | null;
+  expires_at?: string;
+  scope_person_ids?: string[];
+  persons?: Person[];
+  relationships?: { id: string; type: RelationshipType; person_a: string; person_b: string }[];
+}
+
 export interface GalleryItem {
   id: string;
   title: string;
