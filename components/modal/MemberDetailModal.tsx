@@ -103,7 +103,17 @@ export default function MemberDetailModal() {
           const localPerson = personsRef.current.find((p) => p.id === id);
           if (localPerson) {
             setPerson(localPerson);
-            setPrivateData(null);
+            // Still fetch private data for admin/editor even when person is in context
+            if (canEdit) {
+              const { data: privData } = await supabase
+                .from("person_details_private")
+                .select("*")
+                .eq("person_id", id)
+                .maybeSingle();
+              setPrivateData(privData || {});
+            } else {
+              setPrivateData(null);
+            }
             setLoading(false);
             return;
           }
