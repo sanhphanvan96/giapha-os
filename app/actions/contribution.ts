@@ -9,6 +9,50 @@ import {
 } from "@/types";
 import { revalidatePath } from "next/cache";
 
+// ── Helper: copy ảnh từ URL tạm về Supabase bucket avatars (best-effort) ──────
+
+type ServerSupabase = Awaited<ReturnType<typeof getSupabase>>;
+
+async function copyAvatarFromTemp(
+  supabase: ServerSupabase,
+  personId: string,
+  tempUrl: string,
+): Promise<void> {
+  try {
+    const resp = await fetch(tempUrl);
+    if (!resp.ok) {
+      console.error(`copyAvatarFromTemp: fetch ${tempUrl} → ${resp.status}`);
+      return;
+    }
+    const arrayBuffer = await (await resp.blob()).arrayBuffer();
+    const fileName = `${personId}_contrib.webp`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(fileName, arrayBuffer, { contentType: "image/webp", upsert: true });
+
+    if (uploadError) {
+      console.error("copyAvatarFromTemp: upload error", uploadError);
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+    const { error: updateError } = await supabase
+      .from("persons")
+      .update({ avatar_url: `${publicUrl}?t=${Date.now()}` })
+      .eq("id", personId);
+
+    if (updateError) {
+      console.error("copyAvatarFromTemp: update person error", updateError);
+    }
+  } catch (err) {
+    console.error("copyAvatarFromTemp: unexpected error", err);
+  }
+}
+
 // ── Admin: tạo link đóng góp ──────────────────────────────────
 
 export async function createContributionLink(
@@ -83,6 +127,64 @@ export async function revokeContributionLink(
 
   revalidatePath("/dashboard/sharing");
   return { success: true };
+}
+
+// ── Public: upload ảnh tạm qua server-proxy (không cần login) ───────────────
+// Ảnh được upload lên litterbox (72h), không ghi vào Supabase Storage.
+// Khi admin duyệt đề xuất, app sẽ kéo ảnh về bucket avatars.
+
+export async function uploadContributionImage(
+  dataUrl: string,
+): Promise<{ url?: string; error?: string }> {
+  if (!dataUrl.startsWith("data:image/")) {
+    return { error: "File không hợp lệ." };
+  }
+
+  const [header, base64Data] = dataUrl.split(",");
+  if (!base64Data) return { error: "Dữ liệu ảnh không hợp lệ." };
+
+  const mimeMatch = header.match(/data:([^;]+);/);
+  const mimeType = mimeMatch?.[1] ?? "image/webp";
+
+  const buffer = Buffer.from(base64Data, "base64");
+  // Sau nén client-side (512×512, q0.7) kích thước thường ~50–200KB; giới hạn 4MB
+  if (buffer.byteLength > 4 * 1024 * 1024) {
+    return { error: "Ảnh quá lớn (tối đa 4MB)." };
+  }
+
+  const ext = mimeType.split("/")[1] ?? "webp";
+  const formData = new FormData();
+  formData.append("reqtype", "fileupload");
+  formData.append("time", "72h");
+  formData.append(
+    "fileToUpload",
+    new Blob([buffer], { type: mimeType }),
+    `avatar.${ext}`,
+  );
+
+  let resp: Response;
+  try {
+    resp = await fetch(
+      "https://litterbox.catbox.moe/resources/internals/api.php",
+      { method: "POST", body: formData },
+    );
+  } catch (err) {
+    console.error("uploadContributionImage: network error", err);
+    return { error: "Không thể kết nối đến máy chủ ảnh. Thử lại sau." };
+  }
+
+  if (!resp.ok) {
+    console.error("uploadContributionImage: resp not ok", resp.status);
+    return { error: "Upload ảnh thất bại. Thử lại sau." };
+  }
+
+  const url = (await resp.text()).trim();
+  if (!url.startsWith("https://")) {
+    console.error("uploadContributionImage: unexpected response", url);
+    return { error: "Upload ảnh thất bại. Thử lại sau." };
+  }
+
+  return { url };
 }
 
 // ── Public: lấy context từ token (không cần login) ──────────
@@ -169,7 +271,16 @@ export async function approveContribution(
   }
 
   const supabase = await getSupabase();
-  const { error } = await supabase.rpc("approve_contribution", {
+
+  // Đọc payload trước khi gọi RPC để lấy avatar_temp_url (best-effort)
+  const { data: contribRow } = await supabase
+    .from("contributions")
+    .select("payload")
+    .eq("id", id)
+    .single<{ payload: ContributionPayload }>();
+
+  // RPC trả { new_person_ids: { tempId: uuid } } từ migration 20260608120000
+  const { data: rpcResult, error } = await supabase.rpc("approve_contribution", {
     p_id: id,
     p_review_note: reviewNote ?? null,
   });
@@ -177,6 +288,30 @@ export async function approveContribution(
   if (error) {
     console.error("Failed to approve contribution:", error);
     return { error: error.message };
+  }
+
+  // Copy avatar từ URL tạm vào bucket avatars (best-effort — lỗi không block approve)
+  if (contribRow?.payload) {
+    const payload = contribRow.payload;
+    const newPersonIds =
+      (rpcResult as { new_person_ids?: Record<string, string> } | null)
+        ?.new_person_ids ?? {};
+
+    const tasks: Promise<void>[] = [];
+
+    for (const edit of payload.edits ?? []) {
+      if (edit.avatar_temp_url) {
+        tasks.push(copyAvatarFromTemp(supabase, edit.person_id, edit.avatar_temp_url));
+      }
+    }
+    for (const np of payload.new_persons ?? []) {
+      const newId = newPersonIds[np.tempId];
+      if (np.avatar_temp_url && newId) {
+        tasks.push(copyAvatarFromTemp(supabase, newId, np.avatar_temp_url));
+      }
+    }
+
+    await Promise.allSettled(tasks);
   }
 
   revalidatePath("/dashboard/contributions");

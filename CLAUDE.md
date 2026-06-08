@@ -26,9 +26,9 @@ bun install        # install dependencies
 bun run dev        # start dev server at localhost:3000
 bun run build      # production build
 bun run lint       # run eslint
-bun test           # chạy unit tests (logic/utils/server actions) — dùng bun:test
-bun run test       # chạy component tests (React/RTL) — dùng Vitest + jsdom
-bun run test:watch # Vitest watch mode khi dev
+bun test           # unit tests — bun:test (xem mục Testing bên dưới)
+bun run test       # component tests — Vitest + jsdom
+bun run test:watch # Vitest watch mode
 ```
 
 This project uses **Bun** as the package manager. Do not use npm or yarn.
@@ -68,18 +68,20 @@ SITE_NAME=         # optional display name
 Files in `supabase/migrations/`. Dùng `supabase migration new <name>` để tạo (tự sinh timestamp 14 chữ số).
 
 ```bash
-supabase migration up   # apply lên local — không mất data
-supabase db push        # apply lên production — không mất data
+supabase migration up   # apply migration lên LOCAL — an toàn, Claude chạy được
 ```
+
+Apply lên production bằng `supabase db push` — **user tự chạy tay**. Claude không bao giờ tự chạy lệnh ghi lên prod.
 
 ## Database — Quy tắc tuyệt đối
 
 Các lệnh sau **TUYỆT ĐỐI KHÔNG ĐƯỢC CHẠY** trừ khi user nói rõ ràng:
 
 - `supabase db reset` / `supabase db reset --local` — xóa toàn bộ data local
-- `supabase db push` — ghi lên production
 - `DROP TABLE`, `TRUNCATE`, `DELETE` không có `WHERE`
-- Bất kỳ lệnh nào ảnh hưởng đến database (local hoặc production) mà không có lệnh rõ ràng
+- Bất kỳ lệnh nào xóa hoặc reset data (local hoặc production) mà không có lệnh rõ ràng
+
+`supabase db push` không phá data nhưng ghi thẳng lên production — **user tự chạy tay, Claude không tự chạy**.
 
 Sự cố 2026-06-07: chạy `supabase db reset --local` làm mất toàn bộ data nhập tay. Phải mất nhiều giờ khôi phục từ production.
 
@@ -132,7 +134,7 @@ Auth is Supabase Auth. After login the dashboard layout (`app/dashboard/layout.t
 
 ### Data fetching pattern
 
-Server components fetch data directly via `getSupabase()`. All mutations go through Next.js Server Actions in `app/actions/` (`member.ts`, `user.ts`, `data.ts`). Server actions check `profile.role` before writing.
+Server components fetch data directly via `getSupabase()`. All mutations go through Next.js Server Actions in `app/actions/`. Each action checks `profile.role` before writing.
 
 ### Tree visualization
 
@@ -140,7 +142,7 @@ Server components fetch data directly via `getSupabase()`. All mutations go thro
 
 ### Kinship calculator
 
-`utils/kinshipHelpers.ts` — BFS trên relationship graph, map sang xưng hô tiếng Việt. Exports: `computeKinship` (pairwise), `computeEgoLabels` (batch).
+`utils/kinshipHelpers.ts` — BFS trên relationship graph, map sang xưng hô tiếng Việt. Exports: `computeKinship` (pairwise), `computeEgoLabels` (batch). `components/KinshipFinder.tsx` — UI tra cứu quan hệ giữa 2 người, hỗ trợ tìm theo tên khác (alias).
 
 ### View state
 

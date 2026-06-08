@@ -43,12 +43,14 @@ export default async function ContributePage({ params }: PageProps) {
       <div className="min-h-screen bg-neutral text-primary flex flex-col font-sans">
         <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
-            <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-amber-600">
-              <Network className="size-5" />
-            </div>
-            <h1 className="text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
-              {config.siteName}
-            </h1>
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-amber-600">
+                <Network className="size-5" />
+              </div>
+              <h1 className="text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
+                {config.siteName}
+              </h1>
+            </Link>
           </div>
         </header>
 
@@ -85,14 +87,14 @@ export default async function ContributePage({ params }: PageProps) {
     <div className="min-h-screen bg-neutral text-primary flex flex-col font-sans">
       <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-border shadow-soft">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="size-8 rounded-xl bg-white flex items-center justify-center shrink-0 text-amber-600">
               <Network className="size-5" />
             </div>
             <h1 className="text-xl font-serif font-bold bg-rainbow-gradient bg-clip-text text-transparent animate-gradient-flow pb-0.5">
               {config.siteName}
             </h1>
-          </div>
+          </Link>
           {daysLeft !== null && (
             <div className="flex items-center gap-1.5 text-xs text-stone-500">
               <Clock className="size-3.5" />

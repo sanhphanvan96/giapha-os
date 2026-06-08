@@ -101,6 +101,8 @@ export interface ContributionEdit {
     "anniversary_lunar_year" | "anniversary_lunar_month" | "anniversary_lunar_day" |
     "is_deceased" | "note"
   >>;
+  /** URL ảnh đại diện tạm (litterbox, ~72h). Khi admin duyệt, app copy vào bucket avatars. */
+  avatar_temp_url?: string | null;
 }
 
 export interface ContributionNewPerson {
@@ -115,6 +117,8 @@ export interface ContributionNewPerson {
   >>;
   parent_person_id: string;
   relation_type: "biological_child" | "adopted_child";
+  /** URL ảnh đại diện tạm (litterbox, ~72h). Khi admin duyệt, app copy vào bucket avatars. */
+  avatar_temp_url?: string | null;
 }
 
 export interface ContributionPayload {

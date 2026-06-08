@@ -38,6 +38,7 @@ function formatExpiry(expiresAt: string) {
 export default function ContributionLinkManager({ initialLinks, persons }: Props) {
   const [links, setLinks] = useState<ContributionLink[]>(initialLinks);
   const [showCreate, setShowCreate] = useState(false);
+  const [showRevoked, setShowRevoked] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +113,8 @@ export default function ContributionLinkManager({ initialLinks, persons }: Props
   };
 
   const personsMap = new Map(persons.map((p) => [p.id, p]));
+  const revokedCount = links.filter((l) => l.revoked).length;
+  const visibleLinks = showRevoked ? links : links.filter((l) => !l.revoked);
 
   return (
     <div className="space-y-4">
@@ -249,14 +252,18 @@ export default function ContributionLinkManager({ initialLinks, persons }: Props
       )}
 
       {/* Danh sách link */}
-      {links.length === 0 ? (
+      {visibleLinks.length === 0 ? (
         <div className="text-center py-10 border border-dashed border-stone-200 rounded-2xl">
           <LinkIcon className="size-8 text-stone-300 mx-auto mb-2" />
-          <p className="text-stone-400 text-sm">Chưa có link đóng góp nào.</p>
+          <p className="text-stone-400 text-sm">
+            {revokedCount > 0 && !showRevoked
+              ? "Không có link đang hoạt động."
+              : "Chưa có link đóng góp nào."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {links.map((link) => {
+          {visibleLinks.map((link) => {
             const { label: expiryLabel, expired } = formatExpiry(link.expires_at);
             const url = `/donggop/${link.token}`;
             const scopeNames = link.scope_person_ids
@@ -350,6 +357,16 @@ export default function ContributionLinkManager({ initialLinks, persons }: Props
             );
           })}
         </div>
+      )}
+
+      {revokedCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowRevoked((v) => !v)}
+          className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+        >
+          {showRevoked ? "Ẩn link đã thu hồi" : `Xem ${revokedCount} link đã thu hồi`}
+        </button>
       )}
     </div>
   );

@@ -193,10 +193,28 @@ function ContributionCard({
     });
   };
 
+  const setEditAvatarUrl = (editIdx: number, url: string | null) => {
+    setDraftPayload((prev) => {
+      const edits = prev.edits.map((e, i) =>
+        i === editIdx ? { ...e, avatar_temp_url: url } : e,
+      );
+      return { ...prev, edits };
+    });
+  };
+
   const setNewPersonField = (npIdx: number, key: string, value: unknown) => {
     setDraftPayload((prev) => {
       const new_persons = prev.new_persons.map((np, i) =>
         i === npIdx ? { ...np, fields: { ...np.fields, [key]: value } } : np,
+      );
+      return { ...prev, new_persons };
+    });
+  };
+
+  const setNewPersonAvatarUrl = (npIdx: number, url: string | null) => {
+    setDraftPayload((prev) => {
+      const new_persons = prev.new_persons.map((np, i) =>
+        i === npIdx ? { ...np, avatar_temp_url: url } : np,
       );
       return { ...prev, new_persons };
     });
@@ -283,13 +301,37 @@ function ContributionCard({
                 {draftPayload.edits.map((edit, editIdx) => {
                   const person = persons.find((p) => p.id === edit.person_id);
                   const fields = Object.entries(edit.fields) as [string, unknown][];
-                  if (fields.length === 0) return null;
+                  // Hiện card nếu có field thay đổi HOẶC có ảnh đề xuất
+                  if (fields.length === 0 && !edit.avatar_temp_url) return null;
                   return (
                     <div key={edit.person_id} className="bg-stone-50 rounded-xl p-3 space-y-2">
                       <div className="flex items-center gap-2 mb-1">
                         <User className="size-3.5 text-stone-400" />
                         <PersonName personId={edit.person_id} persons={persons} />
                       </div>
+                      {/* Ảnh đề xuất */}
+                      {edit.avatar_temp_url && (
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs text-stone-400">Ảnh đề xuất:</span>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={edit.avatar_temp_url}
+                              alt="Avatar đề xuất"
+                              className="size-14 rounded-xl object-cover border border-stone-200"
+                            />
+                          </div>
+                          {editMode && (
+                            <button
+                              type="button"
+                              onClick={() => setEditAvatarUrl(editIdx, null)}
+                              className="text-xs text-red-500 hover:text-red-600 self-end mb-0.5"
+                            >
+                              Xóa ảnh
+                            </button>
+                          )}
+                        </div>
+                      )}
                       {editMode ? (
                         <div className="space-y-2">
                           {fields.map(([key]) => (
@@ -349,6 +391,29 @@ function ContributionCard({
                       <Plus className="size-3.5 text-emerald-500" />
                       <span className="font-semibold text-stone-800">{np.fields.full_name ?? "(Chưa đặt tên)"}</span>
                     </div>
+                    {/* Ảnh đề xuất */}
+                    {np.avatar_temp_url && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-stone-400">Ảnh đề xuất:</span>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={np.avatar_temp_url}
+                            alt="Avatar đề xuất"
+                            className="size-14 rounded-xl object-cover border border-emerald-200"
+                          />
+                        </div>
+                        {editMode && (
+                          <button
+                            type="button"
+                            onClick={() => setNewPersonAvatarUrl(npIdx, null)}
+                            className="text-xs text-red-500 hover:text-red-600 self-end mb-0.5"
+                          >
+                            Xóa ảnh
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {editMode ? (
                       <div className="space-y-2">
                         {(Object.keys(np.fields) as (keyof typeof np.fields)[]).map((key) => (

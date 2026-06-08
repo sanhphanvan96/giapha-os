@@ -1,6 +1,6 @@
 "use client";
 
-import { submitContribution } from "@/app/actions/contribution";
+import { submitContribution, uploadContributionImage } from "@/app/actions/contribution";
 import {
   ContributionContext,
   ContributionEdit,
@@ -9,8 +9,10 @@ import {
   Gender,
   Person,
 } from "@/types";
+import { compressImage } from "@/utils/imageCompressor";
 import {
   AlertCircle,
+  Camera,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -19,7 +21,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import PersonSelector from "./PersonSelector";
 
 interface Props {
@@ -87,16 +89,121 @@ function GenderSelect({
   );
 }
 
+// ── AvatarUploadField — upload ảnh tạm (litterbox, best-effort) ─────────────
+function AvatarUploadField({
+  avatarUrl,
+  onUpload,
+  onRemove,
+}: {
+  avatarUrl: string | null | undefined;
+  onUpload: (url: string) => void;
+  onRemove: () => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file, {
+        maxWidth: 512,
+        maxHeight: 512,
+        quality: 0.7,
+        outputType: "image/webp",
+      });
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(compressed);
+      });
+      const result = await uploadContributionImage(dataUrl);
+      if (result.error) {
+        setUploadError(result.error);
+      } else if (result.url) {
+        onUpload(result.url);
+      }
+    } catch {
+      setUploadError("Lỗi khi xử lý ảnh. Thử lại.");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-stone-500">
+        Ảnh đại diện{" "}
+        <span className="text-stone-400 font-normal">(tùy chọn — không bắt buộc)</span>
+      </label>
+      {avatarUrl ? (
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={avatarUrl}
+            alt="Ảnh đề xuất"
+            className="size-16 rounded-xl object-cover border border-stone-200"
+          />
+          <button
+            type="button"
+            onClick={onRemove}
+            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors"
+          >
+            <Trash2 className="size-3" />
+            Xóa ảnh
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+          className="flex items-center gap-2 px-3 h-9 rounded-xl border border-dashed border-stone-300 hover:border-stone-400 hover:bg-stone-50 disabled:opacity-60 text-sm text-stone-500 transition-colors w-fit"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Đang tải lên...
+            </>
+          ) : (
+            <>
+              <Camera className="size-4" />
+              Chọn ảnh
+            </>
+          )}
+        </button>
+      )}
+      {uploadError && (
+        <p className="text-xs text-red-500">{uploadError}</p>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
+
 // ── EditPersonPanel — form sửa 1 người có sẵn ────────────────────────────────
 function EditPersonPanel({
   person,
   edit,
   onChange,
+  onAvatarChange,
   onRemove,
 }: {
   person: Person;
   edit: ContributionEdit;
   onChange: (fields: ContributionEdit["fields"]) => void;
+  onAvatarChange: (url: string | null) => void;
   onRemove: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
@@ -233,6 +340,13 @@ function EditPersonPanel({
               </div>
             </div>
           )}
+
+          {/* Ảnh đại diện */}
+          <AvatarUploadField
+            avatarUrl={edit.avatar_temp_url}
+            onUpload={onAvatarChange}
+            onRemove={() => onAvatarChange(null)}
+          />
 
           {/* Ghi chú */}
           <div className="flex flex-col gap-1">
@@ -409,6 +523,13 @@ function NewPersonPanel({
             </div>
           )}
 
+          {/* Ảnh đại diện */}
+          <AvatarUploadField
+            avatarUrl={np.avatar_temp_url}
+            onUpload={(url) => onChange({ ...np, avatar_temp_url: url })}
+            onRemove={() => onChange({ ...np, avatar_temp_url: null })}
+          />
+
           {/* Ghi chú */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-stone-500">Ghi chú</label>
@@ -429,7 +550,11 @@ function NewPersonPanel({
 // ── ContributeForm chính ──────────────────────────────────────────────────────
 export default function ContributeForm({ token, context }: Props) {
   const persons: Person[] = (context.persons ?? []) as Person[];
-  const [edits, setEdits] = useState<ContributionEdit[]>([]);
+  const [edits, setEdits] = useState<ContributionEdit[]>(() =>
+    context.allow_edit && persons.length === 1
+      ? [{ person_id: persons[0].id, fields: {} }]
+      : [],
+  );
   const [newPersons, setNewPersons] = useState<ContributionNewPerson[]>([]);
   const [contributorName, setContributorName] = useState("");
   const [contributorNote, setContributorNote] = useState("");
@@ -453,6 +578,15 @@ export default function ContributeForm({ token, context }: Props) {
     (personId: string, fields: ContributionEdit["fields"]) => {
       setEdits((prev) =>
         prev.map((e) => (e.person_id === personId ? { ...e, fields } : e)),
+      );
+    },
+    [],
+  );
+
+  const updateEditAvatar = useCallback(
+    (personId: string, url: string | null) => {
+      setEdits((prev) =>
+        prev.map((e) => (e.person_id === personId ? { ...e, avatar_temp_url: url } : e)),
       );
     },
     [],
@@ -509,7 +643,7 @@ export default function ContributeForm({ token, context }: Props) {
     }
 
     const payload: ContributionPayload = {
-      edits: edits.filter((e) => Object.keys(e.fields).length > 0),
+      edits: edits.filter((e) => Object.keys(e.fields).length > 0 || !!e.avatar_temp_url),
       new_persons: newPersons,
     };
 
@@ -582,6 +716,7 @@ export default function ContributeForm({ token, context }: Props) {
                   person={person}
                   edit={edit}
                   onChange={(fields) => updateEdit(edit.person_id, fields)}
+                  onAvatarChange={(url) => updateEditAvatar(edit.person_id, url)}
                   onRemove={() => removeEdit(edit.person_id)}
                 />
               );
@@ -638,7 +773,7 @@ export default function ContributeForm({ token, context }: Props) {
 
       {/* ── Thông tin người đóng góp ── */}
       <section className="border-t border-stone-100 pt-6 space-y-3">
-        <h3 className="font-semibold text-stone-700">Thông tin của bạn</h3>
+        <h3 className="font-semibold text-stone-700">Thông tin người đóng góp</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-stone-500">
