@@ -96,10 +96,11 @@ export interface ContributionEdit {
     "full_name" | "other_names" | "gender" |
     "birth_year" | "birth_month" | "birth_day" |
     "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day" |
+    "legal_birth_year" | "legal_birth_month" | "legal_birth_day" |
     "death_year" | "death_month" | "death_day" |
     "death_lunar_year" | "death_lunar_month" | "death_lunar_day" |
     "anniversary_lunar_year" | "anniversary_lunar_month" | "anniversary_lunar_day" |
-    "is_deceased" | "note"
+    "is_deceased" | "note" | "phone_number"
   >>;
   /** URL ảnh đại diện tạm (litterbox, ~72h). Khi admin duyệt, app copy vào bucket avatars. */
   avatar_temp_url?: string | null;
@@ -111,9 +112,11 @@ export interface ContributionNewPerson {
     "full_name" | "other_names" | "gender" |
     "birth_year" | "birth_month" | "birth_day" |
     "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day" |
+    "legal_birth_year" | "legal_birth_month" | "legal_birth_day" |
     "death_year" | "death_month" | "death_day" |
     "death_lunar_year" | "death_lunar_month" | "death_lunar_day" |
-    "is_deceased" | "note"
+    "anniversary_lunar_year" | "anniversary_lunar_month" | "anniversary_lunar_day" |
+    "is_deceased" | "note" | "phone_number"
   >>;
   parent_person_id: string;
   relation_type: "biological_child" | "adopted_child";

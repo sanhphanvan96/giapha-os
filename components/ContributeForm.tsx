@@ -10,6 +10,7 @@ import {
   Person,
 } from "@/types";
 import { compressImage } from "@/utils/imageCompressor";
+import { solarToLunarParts, lunarToSolarParts } from "@/utils/dateHelpers";
 import {
   AlertCircle,
   Camera,
@@ -210,12 +211,103 @@ function EditPersonPanel({
   const [isDeceased, setIsDeceased] = useState(
     edit.fields.is_deceased ?? person.is_deceased ?? false,
   );
+  const [hasDifferentLegalBirth, setHasDifferentLegalBirth] = useState(
+    !!(edit.fields.legal_birth_year ?? person.legal_birth_year),
+  );
+  const [hasDifferentAnniversary, setHasDifferentAnniversary] = useState(
+    !!(edit.fields.anniversary_lunar_month ?? person.anniversary_lunar_month),
+  );
   const f = edit.fields;
 
-  const set = <K extends keyof ContributionEdit["fields"]>(
-    key: K,
-    value: ContributionEdit["fields"][K],
-  ) => onChange({ ...f, [key]: value });
+  const patch = (updates: ContributionEdit["fields"]) => onChange({ ...f, ...updates });
+
+  // Lấy giá trị số hợp lệ từ nhiều nguồn (null/undefined/"" → undefined)
+  const nv = (v: number | "" | null | undefined): number | undefined =>
+    typeof v === "number" ? v : undefined;
+
+  // Auto-convert: ngày sinh dương → âm
+  const handleSolarBirthChange = (
+    key: "birth_year" | "birth_month" | "birth_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "birth_year" ? numVal : nv(f.birth_year ?? person.birth_year);
+    const m = key === "birth_month" ? numVal : nv(f.birth_month ?? person.birth_month);
+    const d = key === "birth_day" ? numVal : nv(f.birth_day ?? person.birth_day);
+    const updates: ContributionEdit["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const lunar = solarToLunarParts(y, m, d);
+      if (lunar) {
+        updates.birth_lunar_year = lunar.year;
+        updates.birth_lunar_month = lunar.month;
+        updates.birth_lunar_day = lunar.day;
+      }
+    }
+    onChange(updates);
+  };
+
+  // Auto-convert: ngày sinh âm → dương
+  const handleLunarBirthChange = (
+    key: "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "birth_lunar_year" ? numVal : nv(f.birth_lunar_year ?? person.birth_lunar_year);
+    const m = key === "birth_lunar_month" ? numVal : nv(f.birth_lunar_month ?? person.birth_lunar_month);
+    const d = key === "birth_lunar_day" ? numVal : nv(f.birth_lunar_day ?? person.birth_lunar_day);
+    const updates: ContributionEdit["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const solar = lunarToSolarParts(y, m, d);
+      if (solar) {
+        updates.birth_year = solar.year;
+        updates.birth_month = solar.month;
+        updates.birth_day = solar.day;
+      }
+    }
+    onChange(updates);
+  };
+
+  // Auto-convert: ngày mất âm → dương
+  const handleLunarDeathChange = (
+    key: "death_lunar_year" | "death_lunar_month" | "death_lunar_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "death_lunar_year" ? numVal : nv(f.death_lunar_year ?? person.death_lunar_year);
+    const m = key === "death_lunar_month" ? numVal : nv(f.death_lunar_month ?? person.death_lunar_month);
+    const d = key === "death_lunar_day" ? numVal : nv(f.death_lunar_day ?? person.death_lunar_day);
+    const updates: ContributionEdit["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const solar = lunarToSolarParts(y, m, d);
+      if (solar) {
+        updates.death_year = solar.year;
+        updates.death_month = solar.month;
+        updates.death_day = solar.day;
+      }
+    }
+    onChange(updates);
+  };
+
+  // Auto-convert: ngày mất dương → âm
+  const handleSolarDeathChange = (
+    key: "death_year" | "death_month" | "death_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "death_year" ? numVal : nv(f.death_year ?? person.death_year);
+    const m = key === "death_month" ? numVal : nv(f.death_month ?? person.death_month);
+    const d = key === "death_day" ? numVal : nv(f.death_day ?? person.death_day);
+    const updates: ContributionEdit["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const lunar = solarToLunarParts(y, m, d);
+      if (lunar) {
+        updates.death_lunar_year = lunar.year;
+        updates.death_lunar_month = lunar.month;
+        updates.death_lunar_day = lunar.day;
+      }
+    }
+    onChange(updates);
+  };
 
   const toggleDeceased = (checked: boolean) => {
     setIsDeceased(checked);
@@ -270,7 +362,7 @@ function EditPersonPanel({
               <input
                 type="text"
                 value={f.full_name ?? person.full_name ?? ""}
-                onChange={(e) => set("full_name", e.target.value)}
+                onChange={(e) => patch({ full_name: e.target.value })}
                 placeholder={person.full_name}
                 className="input-base w-full"
               />
@@ -280,7 +372,7 @@ function EditPersonPanel({
               <input
                 type="text"
                 value={f.other_names ?? person.other_names ?? ""}
-                onChange={(e) => set("other_names", e.target.value)}
+                onChange={(e) => patch({ other_names: e.target.value })}
                 placeholder={person.other_names ?? ""}
                 className="input-base w-full"
               />
@@ -289,18 +381,18 @@ function EditPersonPanel({
 
           <GenderSelect
             value={(f.gender ?? person.gender) || ""}
-            onChange={(v) => set("gender", v || undefined)}
+            onChange={(v) => patch({ gender: v || undefined })}
           />
 
-          {/* Ngày sinh */}
+          {/* Ngày sinh dương */}
           <div>
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
               Ngày sinh (dương lịch)
             </p>
             <div className="grid grid-cols-3 gap-3">
-              <NumberInput label="Năm" value={f.birth_year ?? person.birth_year ?? ""} onChange={(v) => set("birth_year", v === "" ? undefined : v as number)} min={1800} max={2100} />
-              <NumberInput label="Tháng" value={f.birth_month ?? person.birth_month ?? ""} onChange={(v) => set("birth_month", v === "" ? undefined : v as number)} min={1} max={12} />
-              <NumberInput label="Ngày" value={f.birth_day ?? person.birth_day ?? ""} onChange={(v) => set("birth_day", v === "" ? undefined : v as number)} min={1} max={31} />
+              <NumberInput label="Năm" value={f.birth_year ?? person.birth_year ?? ""} onChange={(v) => handleSolarBirthChange("birth_year", v)} min={1800} max={2100} />
+              <NumberInput label="Tháng" value={f.birth_month ?? person.birth_month ?? ""} onChange={(v) => handleSolarBirthChange("birth_month", v)} min={1} max={12} />
+              <NumberInput label="Ngày" value={f.birth_day ?? person.birth_day ?? ""} onChange={(v) => handleSolarBirthChange("birth_day", v)} min={1} max={31} />
             </div>
           </div>
 
@@ -310,10 +402,55 @@ function EditPersonPanel({
               Ngày sinh (âm lịch)
             </p>
             <div className="grid grid-cols-3 gap-3">
-              <NumberInput label="Năm AL" value={f.birth_lunar_year ?? person.birth_lunar_year ?? ""} onChange={(v) => set("birth_lunar_year", v === "" ? undefined : v as number)} min={1800} max={2100} />
-              <NumberInput label="Tháng AL" value={f.birth_lunar_month ?? person.birth_lunar_month ?? ""} onChange={(v) => set("birth_lunar_month", v === "" ? undefined : v as number)} min={1} max={12} />
-              <NumberInput label="Ngày AL" value={f.birth_lunar_day ?? person.birth_lunar_day ?? ""} onChange={(v) => set("birth_lunar_day", v === "" ? undefined : v as number)} min={1} max={30} />
+              <NumberInput label="Năm AL" value={f.birth_lunar_year ?? person.birth_lunar_year ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_year", v)} min={1800} max={2100} />
+              <NumberInput label="Tháng AL" value={f.birth_lunar_month ?? person.birth_lunar_month ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_month", v)} min={1} max={12} />
+              <NumberInput label="Ngày AL" value={f.birth_lunar_day ?? person.birth_lunar_day ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_day", v)} min={1} max={30} />
             </div>
+          </div>
+
+          {/* Ngày sinh trên giấy tờ */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hasDifferentLegalBirth}
+                onChange={(e) => {
+                  setHasDifferentLegalBirth(e.target.checked);
+                  if (!e.target.checked) {
+                    patch({ legal_birth_year: undefined, legal_birth_month: undefined, legal_birth_day: undefined });
+                  }
+                }}
+                className="size-4 rounded border-stone-300 accent-amber-600"
+              />
+              <span className="text-sm text-stone-600">Khác ngày sinh trên giấy tờ</span>
+            </label>
+            {hasDifferentLegalBirth && (
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                  Ngày sinh trên giấy tờ (dương lịch)
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm" value={f.legal_birth_year ?? person.legal_birth_year ?? ""} onChange={(v) => patch({ legal_birth_year: v === "" ? undefined : (v as number) })} min={1800} max={2100} />
+                  <NumberInput label="Tháng" value={f.legal_birth_month ?? person.legal_birth_month ?? ""} onChange={(v) => patch({ legal_birth_month: v === "" ? undefined : (v as number) })} min={1} max={12} />
+                  <NumberInput label="Ngày" value={f.legal_birth_day ?? person.legal_birth_day ?? ""} onChange={(v) => patch({ legal_birth_day: v === "" ? undefined : (v as number) })} min={1} max={31} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Số điện thoại */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">
+              Số điện thoại{" "}
+              <span className="text-stone-400 font-normal">(tùy chọn — chỉ admin xem)</span>
+            </label>
+            <input
+              type="tel"
+              value={f.phone_number ?? ""}
+              onChange={(e) => patch({ phone_number: e.target.value || undefined })}
+              placeholder="0912 345 678"
+              className="input-base w-full"
+            />
           </div>
 
           {/* Đã mất toggle */}
@@ -329,14 +466,56 @@ function EditPersonPanel({
 
           {/* Ngày mất */}
           {isDeceased && (
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
-                Ngày mất (âm lịch)
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                <NumberInput label="Năm AL" value={f.death_lunar_year ?? person.death_lunar_year ?? ""} onChange={(v) => set("death_lunar_year", v === "" ? undefined : v as number)} min={1800} max={2100} />
-                <NumberInput label="Tháng AL" value={f.death_lunar_month ?? person.death_lunar_month ?? ""} onChange={(v) => set("death_lunar_month", v === "" ? undefined : v as number)} min={1} max={12} />
-                <NumberInput label="Ngày AL" value={f.death_lunar_day ?? person.death_lunar_day ?? ""} onChange={(v) => set("death_lunar_day", v === "" ? undefined : v as number)} min={1} max={30} />
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                  Ngày mất (âm lịch)
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm AL" value={f.death_lunar_year ?? person.death_lunar_year ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_year", v)} min={1800} max={2100} />
+                  <NumberInput label="Tháng AL" value={f.death_lunar_month ?? person.death_lunar_month ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_month", v)} min={1} max={12} />
+                  <NumberInput label="Ngày AL" value={f.death_lunar_day ?? person.death_lunar_day ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_day", v)} min={1} max={30} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                  Ngày mất (dương lịch)
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm" value={f.death_year ?? person.death_year ?? ""} onChange={(v) => handleSolarDeathChange("death_year", v)} min={1800} max={2100} />
+                  <NumberInput label="Tháng" value={f.death_month ?? person.death_month ?? ""} onChange={(v) => handleSolarDeathChange("death_month", v)} min={1} max={12} />
+                  <NumberInput label="Ngày" value={f.death_day ?? person.death_day ?? ""} onChange={(v) => handleSolarDeathChange("death_day", v)} min={1} max={31} />
+                </div>
+              </div>
+
+              {/* Ngày giỗ */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={hasDifferentAnniversary}
+                    onChange={(e) => {
+                      setHasDifferentAnniversary(e.target.checked);
+                      if (!e.target.checked) {
+                        patch({ anniversary_lunar_year: undefined, anniversary_lunar_month: undefined, anniversary_lunar_day: undefined });
+                      }
+                    }}
+                    className="size-4 rounded border-stone-300 accent-amber-600"
+                  />
+                  <span className="text-sm text-stone-600">Ngày giỗ khác ngày mất</span>
+                </label>
+                {hasDifferentAnniversary && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                      Ngày giỗ (âm lịch)
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <NumberInput label="Năm AL" value={f.anniversary_lunar_year ?? person.anniversary_lunar_year ?? ""} onChange={(v) => patch({ anniversary_lunar_year: v === "" ? undefined : (v as number) })} min={1800} max={2100} />
+                      <NumberInput label="Tháng AL" value={f.anniversary_lunar_month ?? person.anniversary_lunar_month ?? ""} onChange={(v) => patch({ anniversary_lunar_month: v === "" ? undefined : (v as number) })} min={1} max={12} />
+                      <NumberInput label="Ngày AL" value={f.anniversary_lunar_day ?? person.anniversary_lunar_day ?? ""} onChange={(v) => patch({ anniversary_lunar_day: v === "" ? undefined : (v as number) })} min={1} max={30} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -354,7 +533,7 @@ function EditPersonPanel({
             <textarea
               rows={2}
               value={f.note ?? person.note ?? ""}
-              onChange={(e) => set("note", e.target.value)}
+              onChange={(e) => patch({ note: e.target.value })}
               className="input-base w-full resize-none"
               placeholder="Thông tin bổ sung..."
             />
@@ -381,12 +560,104 @@ function NewPersonPanel({
 }) {
   const [expanded, setExpanded] = useState(true);
   const [isDeceased, setIsDeceased] = useState(np.fields.is_deceased ?? false);
+  const [hasDifferentLegalBirth, setHasDifferentLegalBirth] = useState(
+    !!np.fields.legal_birth_year,
+  );
+  const [hasDifferentAnniversary, setHasDifferentAnniversary] = useState(
+    !!np.fields.anniversary_lunar_month,
+  );
   const f = np.fields;
 
-  const set = <K extends keyof ContributionNewPerson["fields"]>(
-    key: K,
-    value: ContributionNewPerson["fields"][K],
-  ) => onChange({ ...np, fields: { ...f, [key]: value } });
+  const patch = (updates: ContributionNewPerson["fields"]) =>
+    onChange({ ...np, fields: { ...f, ...updates } });
+
+  // Lấy giá trị số hợp lệ (null/undefined/"" → undefined)
+  const nv = (v: number | "" | null | undefined): number | undefined =>
+    typeof v === "number" ? v : undefined;
+
+  // Auto-convert: ngày sinh dương → âm
+  const handleSolarBirthChange = (
+    key: "birth_year" | "birth_month" | "birth_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "birth_year" ? numVal : nv(f.birth_year);
+    const m = key === "birth_month" ? numVal : nv(f.birth_month);
+    const d = key === "birth_day" ? numVal : nv(f.birth_day);
+    const newFields: ContributionNewPerson["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const lunar = solarToLunarParts(y, m, d);
+      if (lunar) {
+        newFields.birth_lunar_year = lunar.year;
+        newFields.birth_lunar_month = lunar.month;
+        newFields.birth_lunar_day = lunar.day;
+      }
+    }
+    onChange({ ...np, fields: newFields });
+  };
+
+  // Auto-convert: ngày sinh âm → dương
+  const handleLunarBirthChange = (
+    key: "birth_lunar_year" | "birth_lunar_month" | "birth_lunar_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "birth_lunar_year" ? numVal : nv(f.birth_lunar_year);
+    const m = key === "birth_lunar_month" ? numVal : nv(f.birth_lunar_month);
+    const d = key === "birth_lunar_day" ? numVal : nv(f.birth_lunar_day);
+    const newFields: ContributionNewPerson["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const solar = lunarToSolarParts(y, m, d);
+      if (solar) {
+        newFields.birth_year = solar.year;
+        newFields.birth_month = solar.month;
+        newFields.birth_day = solar.day;
+      }
+    }
+    onChange({ ...np, fields: newFields });
+  };
+
+  // Auto-convert: ngày mất âm → dương
+  const handleLunarDeathChange = (
+    key: "death_lunar_year" | "death_lunar_month" | "death_lunar_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "death_lunar_year" ? numVal : nv(f.death_lunar_year);
+    const m = key === "death_lunar_month" ? numVal : nv(f.death_lunar_month);
+    const d = key === "death_lunar_day" ? numVal : nv(f.death_lunar_day);
+    const newFields: ContributionNewPerson["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const solar = lunarToSolarParts(y, m, d);
+      if (solar) {
+        newFields.death_year = solar.year;
+        newFields.death_month = solar.month;
+        newFields.death_day = solar.day;
+      }
+    }
+    onChange({ ...np, fields: newFields });
+  };
+
+  // Auto-convert: ngày mất dương → âm
+  const handleSolarDeathChange = (
+    key: "death_year" | "death_month" | "death_day",
+    value: number | "",
+  ) => {
+    const numVal = value === "" ? undefined : (value as number);
+    const y = key === "death_year" ? numVal : nv(f.death_year);
+    const m = key === "death_month" ? numVal : nv(f.death_month);
+    const d = key === "death_day" ? numVal : nv(f.death_day);
+    const newFields: ContributionNewPerson["fields"] = { ...f, [key]: numVal };
+    if (y !== undefined && m !== undefined && d !== undefined && y > 100) {
+      const lunar = solarToLunarParts(y, m, d);
+      if (lunar) {
+        newFields.death_lunar_year = lunar.year;
+        newFields.death_lunar_month = lunar.month;
+        newFields.death_lunar_day = lunar.day;
+      }
+    }
+    onChange({ ...np, fields: newFields });
+  };
 
   const toggleDeceased = (checked: boolean) => {
     setIsDeceased(checked);
@@ -439,7 +710,7 @@ function NewPersonPanel({
               <input
                 type="text"
                 value={f.full_name ?? ""}
-                onChange={(e) => set("full_name", e.target.value)}
+                onChange={(e) => patch({ full_name: e.target.value })}
                 placeholder="Nhập tên..."
                 className="input-base w-full"
                 required
@@ -450,7 +721,7 @@ function NewPersonPanel({
               <input
                 type="text"
                 value={f.other_names ?? ""}
-                onChange={(e) => set("other_names", e.target.value)}
+                onChange={(e) => patch({ other_names: e.target.value })}
                 placeholder=""
                 className="input-base w-full"
               />
@@ -459,7 +730,7 @@ function NewPersonPanel({
 
           <GenderSelect
             value={f.gender || ""}
-            onChange={(v) => set("gender", v || undefined)}
+            onChange={(v) => patch({ gender: v || undefined })}
           />
 
           {/* Cha/mẹ */}
@@ -490,14 +761,69 @@ function NewPersonPanel({
             </select>
           </div>
 
-          {/* Ngày sinh */}
+          {/* Ngày sinh dương */}
           <div>
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Ngày sinh (dương lịch)</p>
             <div className="grid grid-cols-3 gap-3">
-              <NumberInput label="Năm" value={f.birth_year ?? ""} onChange={(v) => set("birth_year", v === "" ? undefined : v as number)} min={1800} max={2100} />
-              <NumberInput label="Tháng" value={f.birth_month ?? ""} onChange={(v) => set("birth_month", v === "" ? undefined : v as number)} min={1} max={12} />
-              <NumberInput label="Ngày" value={f.birth_day ?? ""} onChange={(v) => set("birth_day", v === "" ? undefined : v as number)} min={1} max={31} />
+              <NumberInput label="Năm" value={f.birth_year ?? ""} onChange={(v) => handleSolarBirthChange("birth_year", v)} min={1800} max={2100} />
+              <NumberInput label="Tháng" value={f.birth_month ?? ""} onChange={(v) => handleSolarBirthChange("birth_month", v)} min={1} max={12} />
+              <NumberInput label="Ngày" value={f.birth_day ?? ""} onChange={(v) => handleSolarBirthChange("birth_day", v)} min={1} max={31} />
             </div>
+          </div>
+
+          {/* Ngày sinh âm */}
+          <div>
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Ngày sinh (âm lịch)</p>
+            <div className="grid grid-cols-3 gap-3">
+              <NumberInput label="Năm AL" value={f.birth_lunar_year ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_year", v)} min={1800} max={2100} />
+              <NumberInput label="Tháng AL" value={f.birth_lunar_month ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_month", v)} min={1} max={12} />
+              <NumberInput label="Ngày AL" value={f.birth_lunar_day ?? ""} onChange={(v) => handleLunarBirthChange("birth_lunar_day", v)} min={1} max={30} />
+            </div>
+          </div>
+
+          {/* Ngày sinh trên giấy tờ */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hasDifferentLegalBirth}
+                onChange={(e) => {
+                  setHasDifferentLegalBirth(e.target.checked);
+                  if (!e.target.checked) {
+                    patch({ legal_birth_year: undefined, legal_birth_month: undefined, legal_birth_day: undefined });
+                  }
+                }}
+                className="size-4 rounded border-stone-300 accent-amber-600"
+              />
+              <span className="text-sm text-stone-600">Khác ngày sinh trên giấy tờ</span>
+            </label>
+            {hasDifferentLegalBirth && (
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                  Ngày sinh trên giấy tờ (dương lịch)
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm" value={f.legal_birth_year ?? ""} onChange={(v) => patch({ legal_birth_year: v === "" ? undefined : (v as number) })} min={1800} max={2100} />
+                  <NumberInput label="Tháng" value={f.legal_birth_month ?? ""} onChange={(v) => patch({ legal_birth_month: v === "" ? undefined : (v as number) })} min={1} max={12} />
+                  <NumberInput label="Ngày" value={f.legal_birth_day ?? ""} onChange={(v) => patch({ legal_birth_day: v === "" ? undefined : (v as number) })} min={1} max={31} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Số điện thoại */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">
+              Số điện thoại{" "}
+              <span className="text-stone-400 font-normal">(tùy chọn — chỉ admin xem)</span>
+            </label>
+            <input
+              type="tel"
+              value={f.phone_number ?? ""}
+              onChange={(e) => patch({ phone_number: e.target.value || undefined })}
+              placeholder="0912 345 678"
+              className="input-base w-full"
+            />
           </div>
 
           {/* Đã mất toggle */}
@@ -513,12 +839,52 @@ function NewPersonPanel({
 
           {/* Ngày mất */}
           {isDeceased && (
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Ngày mất (âm lịch)</p>
-              <div className="grid grid-cols-3 gap-3">
-                <NumberInput label="Năm AL" value={f.death_lunar_year ?? ""} onChange={(v) => set("death_lunar_year", v === "" ? undefined : v as number)} min={1800} max={2100} />
-                <NumberInput label="Tháng AL" value={f.death_lunar_month ?? ""} onChange={(v) => set("death_lunar_month", v === "" ? undefined : v as number)} min={1} max={12} />
-                <NumberInput label="Ngày AL" value={f.death_lunar_day ?? ""} onChange={(v) => set("death_lunar_day", v === "" ? undefined : v as number)} min={1} max={30} />
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Ngày mất (âm lịch)</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm AL" value={f.death_lunar_year ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_year", v)} min={1800} max={2100} />
+                  <NumberInput label="Tháng AL" value={f.death_lunar_month ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_month", v)} min={1} max={12} />
+                  <NumberInput label="Ngày AL" value={f.death_lunar_day ?? ""} onChange={(v) => handleLunarDeathChange("death_lunar_day", v)} min={1} max={30} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Ngày mất (dương lịch)</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumberInput label="Năm" value={f.death_year ?? ""} onChange={(v) => handleSolarDeathChange("death_year", v)} min={1800} max={2100} />
+                  <NumberInput label="Tháng" value={f.death_month ?? ""} onChange={(v) => handleSolarDeathChange("death_month", v)} min={1} max={12} />
+                  <NumberInput label="Ngày" value={f.death_day ?? ""} onChange={(v) => handleSolarDeathChange("death_day", v)} min={1} max={31} />
+                </div>
+              </div>
+
+              {/* Ngày giỗ */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={hasDifferentAnniversary}
+                    onChange={(e) => {
+                      setHasDifferentAnniversary(e.target.checked);
+                      if (!e.target.checked) {
+                        patch({ anniversary_lunar_year: undefined, anniversary_lunar_month: undefined, anniversary_lunar_day: undefined });
+                      }
+                    }}
+                    className="size-4 rounded border-stone-300 accent-amber-600"
+                  />
+                  <span className="text-sm text-stone-600">Ngày giỗ khác ngày mất</span>
+                </label>
+                {hasDifferentAnniversary && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                      Ngày giỗ (âm lịch)
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <NumberInput label="Năm AL" value={f.anniversary_lunar_year ?? ""} onChange={(v) => patch({ anniversary_lunar_year: v === "" ? undefined : (v as number) })} min={1800} max={2100} />
+                      <NumberInput label="Tháng AL" value={f.anniversary_lunar_month ?? ""} onChange={(v) => patch({ anniversary_lunar_month: v === "" ? undefined : (v as number) })} min={1} max={12} />
+                      <NumberInput label="Ngày AL" value={f.anniversary_lunar_day ?? ""} onChange={(v) => patch({ anniversary_lunar_day: v === "" ? undefined : (v as number) })} min={1} max={30} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -536,7 +902,7 @@ function NewPersonPanel({
             <textarea
               rows={2}
               value={f.note ?? ""}
-              onChange={(e) => set("note", e.target.value)}
+              onChange={(e) => patch({ note: e.target.value })}
               className="input-base w-full resize-none"
               placeholder="Thông tin bổ sung..."
             />

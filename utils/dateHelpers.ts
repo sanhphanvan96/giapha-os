@@ -252,3 +252,37 @@ export function getTodayLunar() {
     lunarDayStr: `${lunar.getDay()} tháng ${Math.abs(lunar.getMonth())}`,
   };
 }
+
+// ── Chuyển đổi dương↔âm cho form đóng góp ─────────────────────────────────────
+
+/** Dương lịch → Âm lịch. Trả null nếu convert lỗi hoặc thiếu ô. */
+export function solarToLunarParts(
+  year: number,
+  month: number,
+  day: number,
+): { year: number; month: number; day: number } | null {
+  if (year <= 100) return null;
+  try {
+    const solar = Solar.fromYmd(year, month, day);
+    const lunar = solar.getLunar();
+    return { year: lunar.getYear(), month: Math.abs(lunar.getMonth()), day: lunar.getDay() };
+  } catch {
+    return null;
+  }
+}
+
+/** Âm lịch → Dương lịch. Trả null nếu convert lỗi hoặc thiếu ô. */
+export function lunarToSolarParts(
+  year: number,
+  month: number,
+  day: number,
+): { year: number; month: number; day: number } | null {
+  if (year <= 100) return null;
+  try {
+    const lunar = Lunar.fromYmd(year, month, day);
+    const solar = lunar.getSolar();
+    return { year: solar.getYear(), month: solar.getMonth(), day: solar.getDay() };
+  } catch {
+    return null;
+  }
+}
