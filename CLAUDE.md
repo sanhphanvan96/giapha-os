@@ -72,6 +72,25 @@ supabase migration up   # apply lên local — không mất data
 supabase db push        # apply lên production — không mất data
 ```
 
+## Database — Quy tắc tuyệt đối
+
+Các lệnh sau **TUYỆT ĐỐI KHÔNG ĐƯỢC CHẠY** trừ khi user nói rõ ràng:
+
+- `supabase db reset` / `supabase db reset --local` — xóa toàn bộ data local
+- `supabase db push` — ghi lên production
+- `DROP TABLE`, `TRUNCATE`, `DELETE` không có `WHERE`
+- Bất kỳ lệnh nào ảnh hưởng đến database (local hoặc production) mà không có lệnh rõ ràng
+
+Sự cố 2026-06-07: chạy `supabase db reset --local` làm mất toàn bộ data nhập tay. Phải mất nhiều giờ khôi phục từ production.
+
+## Database Backup
+
+```bash
+./scripts/backup-prod.sh   # dump schema + data từ production, giữ 7 bản gần nhất
+```
+
+Bản backup lưu tại `backups/` (gitignored). Script dùng `supabase db dump --linked` — cần Docker chạy và `supabase login`.
+
 First-time setup (login, link, pull baseline): xem [`docs/runbook-migrations.md`](docs/runbook-migrations.md).
 
 ## Plans

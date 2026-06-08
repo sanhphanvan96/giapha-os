@@ -2,8 +2,8 @@
 
 **Nguồn:** Code review bằng Serena MCP  
 **Tạo:** 2026-06-02  
-**Cập nhật:** 2026-06-02  
-**Trạng thái:** 🟡 Chưa bắt đầu
+**Cập nhật:** 2026-06-07  
+**Trạng thái:** 🟡 Đang làm (1.5/9 xong)
 
 ---
 
@@ -12,8 +12,8 @@
 ```
 [ ] P1 — Data integrity (0/2)
 [ ] P2 — Logic bugs     (0/3)
-[ ] P3 — Memory & UX    (0/2)
-[ ] P4 — Code quality   (0/2)
+[~] P3 — Memory & UX    (1/2)
+[~] P4 — Code quality   (0.5/2)
 ```
 
 ---
@@ -130,7 +130,7 @@ Thêm cleanup trong `useEffect` return khi unmount.
 
 ---
 
-### [ ] 3.2 — Search không bao gồm `other_names`
+### [x] 3.2 — Search không bao gồm `other_names`
 
 **File:** `components/MemberList.tsx` (line 31)  
 **Vấn đề:** Chỉ tìm theo `full_name`, bỏ sót nickname/tên thánh lưu trong `other_names`.
@@ -160,9 +160,10 @@ const matchesSearch =
 
 ---
 
-### [ ] 4.2 — `fetchAll` trong `exportData` dùng `any[]`
+### [~] 4.2 — `fetchAll` trong `exportData` dùng `any[]`
 
 **File:** `app/actions/data.ts` (trong `exportData()`)  
+**Trạng thái:** Một phần — đã đổi `any[]` → `unknown[]` (2026-06-07). Chưa generic `<T>`.  
 **Vấn đề:** `let allData: any[] = []` bypass TypeScript hoàn toàn, lỗi shape data không bị catch lúc build.
 
 **Fix:** Type rõ ràng theo từng table:

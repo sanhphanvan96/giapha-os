@@ -1,6 +1,9 @@
 import AdminSharingList from "@/components/AdminSharingList";
+import ContributionLinkManager from "@/components/ContributionLinkManager";
 import { getShareLinks, getShareViewStats, ShareViewStat } from "@/app/actions/share";
-import { getProfile } from "@/utils/supabase/queries";
+import { getContributionLinks } from "@/app/actions/contribution";
+import { getProfile, getSupabase } from "@/utils/supabase/queries";
+import { Person } from "@/types";
 import { redirect } from "next/navigation";
 
 export default async function AdminSharingPage() {
@@ -14,9 +17,15 @@ export default async function AdminSharingPage() {
   const isAdmin = profile?.role === "admin";
 
   // Fetch song song danh sách link + stats lượt xem (stats chỉ cho admin)
-  const [linksResult, statsResult] = await Promise.all([
+  const supabase = await getSupabase();
+
+  const [linksResult, statsResult, contributionLinks, personsData] = await Promise.all([
     getShareLinks(),
     isAdmin ? getShareViewStats() : Promise.resolve({ data: [] as ShareViewStat[] }),
+    isAdmin ? getContributionLinks() : Promise.resolve([]),
+    isAdmin
+      ? supabase.from("persons").select("id, full_name, other_names, gender, birth_year").order("full_name")
+      : Promise.resolve({ data: [] }),
   ]);
 
   const initialLinks = ("links" in linksResult && Array.isArray(linksResult.links))
@@ -25,6 +34,7 @@ export default async function AdminSharingPage() {
   const viewStats: ShareViewStat[] = ("data" in statsResult && Array.isArray(statsResult.data))
     ? statsResult.data
     : [];
+  const persons = (("data" in personsData ? personsData.data : []) as Pick<Person, "id" | "full_name" | "other_names" | "gender" | "birth_year">[]) ?? [];
 
   return (
     <main className="flex-1 overflow-auto bg-stone-50/50 flex flex-col pt-8 relative w-full">
@@ -87,8 +97,25 @@ export default async function AdminSharingPage() {
           </div>
         </div>
 
-        {/* Table list */}
+        {/* Share links table */}
         <AdminSharingList initialLinks={initialLinks} viewStats={viewStats} isAdmin={isAdmin} />
+
+        {/* Link đóng góp — chỉ admin */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-stone-800">Link đóng góp</h2>
+              <p className="text-stone-500 mt-1 text-sm">
+                Tạo link gửi cho người thân để bổ sung / sửa thông tin gia phả.
+                Mọi thay đổi vào hàng chờ duyệt — không tự động ghi vào database.
+              </p>
+            </div>
+            <ContributionLinkManager
+              initialLinks={contributionLinks}
+              persons={persons}
+            />
+          </div>
+        )}
       </div>
     </main>
   );

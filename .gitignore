@@ -51,3 +51,7 @@ skills-lock.json
 data/
 docs/sample/
 .serena
+# Backups
+backups/*.sql
+backups/*.sql.gz
+scripts/.env.backup

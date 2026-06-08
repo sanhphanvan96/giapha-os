@@ -22,6 +22,7 @@ import { FemaleIcon, MaleIcon } from "./GenderIcons";
 interface PersonNode {
   id: string;
   full_name: string;
+  other_names?: string | null;
   gender: "male" | "female" | "other";
   birth_year: number | null;
   birth_order: number | null;
@@ -71,7 +72,12 @@ function PersonSelector({
         .filter(
           (p) =>
             p.id !== disabledId &&
-            removeDiacritics(p.full_name).includes(removeDiacritics(search)),
+            (() => {
+              const q = removeDiacritics(search);
+              const nameClean = removeDiacritics(p.full_name);
+              const aliasClean = p.other_names ? removeDiacritics(p.other_names) : "";
+              return nameClean.includes(q) || aliasClean.includes(q);
+            })(),
         )
         .slice(0, 20),
     [persons, disabledId, search],
