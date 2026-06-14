@@ -349,10 +349,10 @@ DROP POLICY IF EXISTS "Users can upload avatars." ON storage.objects;
 CREATE POLICY "Users can upload avatars." ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
 
 DROP POLICY IF EXISTS "Users can update avatars." ON storage.objects;
-CREATE POLICY "Users can update avatars." ON storage.objects FOR UPDATE USING ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
+CREATE POLICY "Users can update avatars." ON storage.objects FOR UPDATE USING ( bucket_id = 'avatars' AND (auth.uid() = owner OR public.is_admin() OR public.is_editor()) );
 
 DROP POLICY IF EXISTS "Users can delete avatars." ON storage.objects;
-CREATE POLICY "Users can delete avatars." ON storage.objects FOR DELETE USING ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
+CREATE POLICY "Users can delete avatars." ON storage.objects FOR DELETE USING ( bucket_id = 'avatars' AND (auth.uid() = owner OR public.is_admin() OR public.is_editor()) );
 
 -- ==========================================
 -- ADMIN RPC FUNCTIONS

@@ -1,3 +1,20 @@
+/** Host duy nhất được phép cho ảnh tạm của contribution (chống SSRF). */
+export const ALLOWED_TEMP_IMAGE_HOST = "litterbox.catbox.moe";
+
+/** true nếu url là HTTPS và đúng host litterbox. Mọi input khác → false. */
+export function isAllowedTempImageUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  return (
+    parsed.protocol === "https:" &&
+    parsed.hostname === ALLOWED_TEMP_IMAGE_HOST
+  );
+}
+
 export const NUMBER_FIELDS = new Set([
   "birth_year", "birth_month", "birth_day",
   "birth_lunar_year", "birth_lunar_month", "birth_lunar_day",

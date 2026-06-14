@@ -126,9 +126,15 @@ export async function adminSetUserPerson(
 // Change own email without triggering Supabase's "Secure email change" confirmation.
 // Uses a SECURITY DEFINER RPC that writes directly to auth.users (same pattern as admin_create_user).
 export async function updateMyEmail(newEmail: string) {
+  const email = newEmail.trim().toLowerCase();
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!EMAIL_RE.test(email)) {
+    return { error: "Email không hợp lệ." };
+  }
+
   const supabase = await getSupabase();
   const { error } = await supabase.rpc("update_my_email", {
-    new_email: newEmail,
+    new_email: email,
   });
 
   if (error) {
