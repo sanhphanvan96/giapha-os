@@ -5,6 +5,7 @@ import { getContributionLinks } from "@/app/actions/contribution";
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
 import { Person } from "@/types";
 import { redirect } from "next/navigation";
+import { Share2, Inbox } from "lucide-react";
 
 export default async function AdminSharingPage() {
   const profile = await getProfile();
@@ -42,7 +43,17 @@ export default async function AdminSharingPage() {
         <div className="mb-6">
           <h1 className="title">Liên kết Chia sẻ</h1>
           <p className="text-stone-500 mt-2 text-sm sm:text-base">
-            Quản lý các đường dẫn cho phép người ngoài dòng họ xem sơ đồ phả hệ mà không cần đăng ký tài khoản.
+            Quản lý các đường dẫn chia sẻ và đóng góp thông tin gia phả.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+            <Share2 className="size-5 text-amber-600" />
+            Link xem gia phả
+          </h2>
+          <p className="text-stone-500 mt-1 text-sm">
+            Tạo link chia sẻ để người ngoài dòng họ xem sơ đồ phả hệ (chỉ đọc, không cần đăng nhập).
           </p>
         </div>
 
@@ -104,12 +115,66 @@ export default async function AdminSharingPage() {
         {isAdmin && (
           <div className="mt-12">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-stone-800">Link đóng góp</h2>
+              <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                <Inbox className="size-5 text-emerald-600" />
+                Link đóng góp
+              </h2>
               <p className="text-stone-500 mt-1 text-sm">
                 Tạo link gửi cho người thân để bổ sung / sửa thông tin gia phả.
-                Mọi thay đổi vào hàng chờ duyệt — không tự động ghi vào database.
+                Mọi thay đổi vào hàng chờ duyệt (không cần đăng nhập).
               </p>
             </div>
+            {/* Info Legend */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+              {/* Rules */}
+              <div className="bg-white rounded-2xl border border-stone-200 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Quy tắc đóng góp
+                  </span>
+                  <span className="text-xs text-stone-400">Hàng chờ duyệt &amp; Phạm vi</span>
+                </div>
+                <ul className="space-y-1.5 text-sm text-stone-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5">•</span>
+                    <span>Người nhận link không cần đăng nhập tài khoản.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5">•</span>
+                    <span>Chỉ sửa/thêm được những người trong <strong>phạm vi</strong> đã chọn khi tạo link.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5">•</span>
+                    <span>Mọi đề xuất vào <strong>hàng chờ duyệt</strong>, không tự động ghi vào dữ liệu gia phả.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-white rounded-2xl border border-stone-200 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-200">
+                    Mẹo sử dụng
+                  </span>
+                  <span className="text-xs text-stone-400">Cấu hình &amp; Thu hồi</span>
+                </div>
+                <ul className="space-y-1.5 text-sm text-stone-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-stone-400 mt-0.5">•</span>
+                    <span>Có thể đặt thời gian hết hạn (7, 14, 30 hoặc 90 ngày).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-stone-400 mt-0.5">•</span>
+                    <span>Thu hồi link sẽ chặn ngay việc gửi đề xuất mới qua link đó.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-stone-400 mt-0.5">•</span>
+                    <span>Ghi chú hiển thị cho người nhận để hướng dẫn cụ thể (vd: chi nào cần bổ sung).</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <ContributionLinkManager
               initialLinks={contributionLinks}
               persons={persons}

@@ -8,6 +8,8 @@ import {
   PendingContribution,
 } from "@/types";
 import { isAllowedTempImageUrl } from "@/utils/contributionHelpers";
+import { createAdminClient } from "@/utils/supabase/admin";
+import { sendPushToSubscriptions } from "@/utils/push";
 import { revalidatePath } from "next/cache";
 
 // ── Helper: copy ảnh từ URL tạm về Supabase bucket avatars (best-effort) ──────
@@ -57,6 +59,33 @@ async function copyAvatarFromTemp(
     }
   } catch (err) {
     console.error("copyAvatarFromTemp: unexpected error", err);
+  }
+}
+
+// Báo cho admin đã subscribe push khi có đề xuất mới — best-effort, không throw.
+async function notifyAdminsNewContribution(contributorName: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    if (!admin) return;
+
+    const { data, error } = await admin.rpc("get_push_subscriptions_for", {
+      p_role: "admin",
+      p_pref_key: "new_contribution",
+    });
+
+    if (error) {
+      console.error("notifyAdminsNewContribution: RPC error", error);
+      return;
+    }
+
+    await sendPushToSubscriptions(data ?? [], {
+      title: "Đề xuất mới",
+      body: `${contributorName} vừa gửi một đề xuất bổ sung gia phả.`,
+      url: "/dashboard/contributions",
+      tag: "contribution",
+    });
+  } catch (err) {
+    console.error("notifyAdminsNewContribution: unexpected error", err);
   }
 }
 
@@ -243,6 +272,10 @@ export async function submitContribution(
     console.error("Failed to submit contribution:", error);
     return { error: error.message };
   }
+
+  // await để đảm bảo chạy xong trước khi serverless function bị đóng (Vercel);
+  // hàm tự catch lỗi nên không ảnh hưởng kết quả trả về cho người gửi.
+  await notifyAdminsNewContribution(name.trim());
 
   return { success: true, contributionId: data as string };
 }

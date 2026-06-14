@@ -137,15 +137,6 @@ export default function HeaderMenu() {
                   </Link>
 
                   <Link
-                    href="/dashboard/lineage"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
-                  >
-                    <Network className="size-4" />
-                    Thứ tự gia phả
-                  </Link>
-
-                  <Link
                     href="/dashboard/data"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-teal-700 hover:bg-teal-50 transition-colors"
