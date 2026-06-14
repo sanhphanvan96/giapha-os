@@ -102,7 +102,7 @@ describe("Share Server Actions", () => {
 
       expect(result).toHaveProperty("success", true);
       expect(result).toHaveProperty("token");
-      expect(result.token).toMatch(/^giapha-[a-z0-9]{6}$/);
+      expect(result.token).toMatch(/^giapha-[a-zA-Z0-9]{8}$/);
 
       expect(insertCalls.length).toBe(1);
       expect(insertCalls[0].table).toBe("shared_links");

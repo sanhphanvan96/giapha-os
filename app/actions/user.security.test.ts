@@ -200,4 +200,22 @@ describe("updateMyEmail — RPC routing", () => {
     const result = await updateMyEmail("taken@example.com");
     expect(result).toHaveProperty("error");
   });
+
+  it("rejects malformed email without calling RPC", async () => {
+    const { updateMyEmail } = await import("./user");
+    for (const bad of ["abc", "a@b", "no-at.com", "foo@bar", "", "  "]) {
+      const result = await updateMyEmail(bad);
+      expect(result).toEqual({ error: "Email không hợp lệ." });
+    }
+    // Không một input xấu nào được chạm tới DB
+    expect(rpcCalls.find((c) => c.name === "update_my_email")).toBeUndefined();
+  });
+
+  it("trims and lowercases email before sending to RPC", async () => {
+    const { updateMyEmail } = await import("./user");
+    await updateMyEmail("  New@Example.COM  ");
+
+    const call = rpcCalls.find((c) => c.name === "update_my_email");
+    expect(call?.params).toEqual({ new_email: "new@example.com" });
+  });
 });

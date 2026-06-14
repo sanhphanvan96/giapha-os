@@ -1,6 +1,10 @@
 import { describe, it, expect } from "bun:test";
 import { ContributionPayload } from "@/types";
-import { isEmptyValue, formatFieldValue } from "./contributionHelpers";
+import {
+  isEmptyValue,
+  formatFieldValue,
+  isAllowedTempImageUrl,
+} from "./contributionHelpers";
 
 // ── Guard scope logic (mirror của RPC submit_contribution) ──────────────────
 
@@ -233,5 +237,39 @@ describe("formatFieldValue", () => {
     expect(formatFieldValue("note", "ghi chú")).toBe("ghi chú");
     expect(formatFieldValue("note", null)).toBe("");
     expect(formatFieldValue("note", "")).toBe("");
+  });
+});
+
+// ── isAllowedTempImageUrl — guard chống SSRF khi copy avatar tạm ─────────────
+
+describe("isAllowedTempImageUrl", () => {
+  it("accepts HTTPS litterbox URLs", () => {
+    expect(isAllowedTempImageUrl("https://litterbox.catbox.moe/abc123.webp")).toBe(true);
+    expect(isAllowedTempImageUrl("https://litterbox.catbox.moe/x/y/z.png")).toBe(true);
+  });
+
+  it("rejects non-HTTPS schemes", () => {
+    expect(isAllowedTempImageUrl("http://litterbox.catbox.moe/a.webp")).toBe(false);
+    expect(isAllowedTempImageUrl("ftp://litterbox.catbox.moe/a.webp")).toBe(false);
+    expect(isAllowedTempImageUrl("file:///etc/passwd")).toBe(false);
+  });
+
+  it("rejects other hosts (SSRF targets)", () => {
+    for (const url of [
+      "https://evil.com/a.webp",
+      "https://catbox.moe/a.webp",
+      "https://litterbox.catbox.moe.evil.com/a.webp",
+      "https://169.254.169.254/latest/meta-data/",
+      "https://localhost/admin",
+      "https://127.0.0.1:8080/",
+    ]) {
+      expect(isAllowedTempImageUrl(url)).toBe(false);
+    }
+  });
+
+  it("rejects malformed / empty input", () => {
+    for (const bad of ["", "  ", "not-a-url", "litterbox.catbox.moe/a.webp"]) {
+      expect(isAllowedTempImageUrl(bad)).toBe(false);
+    }
   });
 });

@@ -1,7 +1,18 @@
 "use server";
 
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
+
+// Sinh slug ngẫu nhiên crypto-secure, base62, độ dài cố định — URL-friendly.
+function genShareSlug(len = 8): string {
+  const alphabet =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const bytes = randomBytes(len);
+  let out = "";
+  for (let i = 0; i < len; i++) out += alphabet[bytes[i] % alphabet.length];
+  return out;
+}
 
 export interface ShareView {
   viewed_at: string;
@@ -29,9 +40,8 @@ export async function createShareLink(expiryDays: number, settings: Record<strin
 
   const supabase = await getSupabase();
 
-  // Sinh chuỗi ngẫu nhiên 6 ký tự gồm chữ/số
-  const randomChars = Math.random().toString(36).substring(2, 8);
-  const token = `giapha-${randomChars}`;
+  // Sinh token crypto-secure (8 ký tự base62) — không đoán được, vẫn ngắn gọn
+  const token = `giapha-${genShareSlug(8)}`;
 
   // Tính ngày hết hạn
   const expiresAt = new Date();

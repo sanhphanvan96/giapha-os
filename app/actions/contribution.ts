@@ -7,6 +7,7 @@ import {
   ContributionPayload,
   PendingContribution,
 } from "@/types";
+import { isAllowedTempImageUrl } from "@/utils/contributionHelpers";
 import { revalidatePath } from "next/cache";
 
 // ── Helper: copy ảnh từ URL tạm về Supabase bucket avatars (best-effort) ──────
@@ -19,6 +20,12 @@ async function copyAvatarFromTemp(
   tempUrl: string,
 ): Promise<void> {
   try {
+    // Guard SSRF: chỉ chấp nhận ảnh tạm từ litterbox qua HTTPS
+    if (!isAllowedTempImageUrl(tempUrl)) {
+      console.error("copyAvatarFromTemp: URL/host không cho phép", tempUrl);
+      return;
+    }
+
     const resp = await fetch(tempUrl);
     if (!resp.ok) {
       console.error(`copyAvatarFromTemp: fetch ${tempUrl} → ${resp.status}`);
