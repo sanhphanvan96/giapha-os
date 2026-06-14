@@ -1,8 +1,22 @@
 "use client";
 
 import { subscribeToPush, unsubscribeFromPush } from "@/app/actions/push";
-import { Bell, BellRing, Loader2 } from "lucide-react";
+import { Bell, BellRing, Loader2, Share, SquarePlus } from "lucide-react";
 import { useEffect, useState } from "react";
+
+// iOS (Safari/Chrome/Brave... đều chạy trên WebKit) chỉ hỗ trợ Web Push khi web app
+// được "Thêm vào màn hình chính" (chạy ở chế độ standalone).
+function isIOS(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+function isStandalone(): boolean {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    // iOS Safari cũ: navigator.standalone
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
 
 // VAPID public key dạng base64url → Uint8Array, theo yêu cầu của pushManager.subscribe
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -17,10 +31,12 @@ type Status = "unsupported" | "loading" | "subscribed" | "unsubscribed";
 export default function PushSubscribeToggle() {
   const [status, setStatus] = useState<Status>("loading");
   const [pending, setPending] = useState(false);
+  const [needsHomeScreen, setNeedsHomeScreen] = useState(false);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setStatus("unsupported");
+      if (isIOS() && !isStandalone()) setNeedsHomeScreen(true);
       return;
     }
 
@@ -89,7 +105,22 @@ export default function PushSubscribeToggle() {
     }
   };
 
-  if (status === "unsupported" || status === "loading") return null;
+  if (status === "loading") return null;
+
+  if (status === "unsupported") {
+    if (!needsHomeScreen) return null;
+    return (
+      <div className="flex items-start gap-2 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs max-w-sm">
+        <Bell className="size-4 shrink-0 mt-0.5" />
+        <p>
+          Để nhận thông báo trên iPhone/iPad: nhấn{" "}
+          <Share className="size-3.5 inline -mt-0.5" aria-label="Chia sẻ" /> (Chia sẻ) rồi chọn{" "}
+          <SquarePlus className="size-3.5 inline -mt-0.5" aria-label="Thêm vào màn hình chính" />{" "}
+          <strong>&quot;Thêm vào màn hình chính&quot;</strong>, sau đó mở app từ icon vừa thêm.
+        </p>
+      </div>
+    );
+  }
 
   if (status === "subscribed") {
     return (
