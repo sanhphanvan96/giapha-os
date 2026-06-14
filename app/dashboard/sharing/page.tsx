@@ -25,7 +25,7 @@ export default async function AdminSharingPage() {
     isAdmin ? getShareViewStats() : Promise.resolve({ data: [] as ShareViewStat[] }),
     isAdmin ? getContributionLinks() : Promise.resolve([]),
     isAdmin
-      ? supabase.from("persons").select("id, full_name, other_names, gender, birth_year").order("full_name")
+      ? supabase.from("persons").select("id, full_name, other_names, gender, birth_year, avatar_url, generation").order("full_name")
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -35,7 +35,7 @@ export default async function AdminSharingPage() {
   const viewStats: ShareViewStat[] = ("data" in statsResult && Array.isArray(statsResult.data))
     ? statsResult.data
     : [];
-  const persons = (("data" in personsData ? personsData.data : []) as Pick<Person, "id" | "full_name" | "other_names" | "gender" | "birth_year">[]) ?? [];
+  const persons = (("data" in personsData ? personsData.data : []) as Pick<Person, "id" | "full_name" | "other_names" | "gender" | "birth_year" | "avatar_url" | "generation">[]) ?? [];
 
   return (
     <main className="flex-1 overflow-auto bg-stone-50/50 flex flex-col pt-8 relative w-full">
