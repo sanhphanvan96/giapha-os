@@ -2,6 +2,7 @@
 
 import {
   approveContribution,
+  deleteContribution,
   rejectContribution,
   updateContributionPayload,
 } from "@/app/actions/contribution";
@@ -19,6 +20,7 @@ import {
   Save,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
   User,
   X,
   XCircle,
@@ -189,15 +191,18 @@ function EditField({
 function ContributionCard({
   contribution,
   persons,
-  onDone,
+  onStatusChange,
+  onDelete,
 }: {
   contribution: PendingContribution;
   persons: Props["persons"];
-  onDone: () => void;
+  onStatusChange: (status: "approved" | "rejected") => void;
+  onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [reviewNote, setReviewNote] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
   const [actionDone, setActionDone] = useState<"approved" | "rejected" | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [draftPayload, setDraftPayload] = useState<ContributionPayload>(contribution.payload);
@@ -258,18 +263,30 @@ function ContributionCard({
         alert(result.error);
         return;
       }
-      setActionDone(action === "approve" ? "approved" : "rejected");
-      onDone();
+      const newStatus = action === "approve" ? "approved" : "rejected";
+      setActionDone(newStatus);
+      onStatusChange(newStatus);
+    });
+  };
+
+  const handleDelete = () => {
+    if (!confirm("Xóa đề xuất này? Hành động không thể hoàn tác.")) return;
+    startDeleteTransition(async () => {
+      const result = await deleteContribution(contribution.id);
+      if (result.error) { alert(result.error); return; }
+      onDelete();
     });
   };
 
   return (
     <div className={`rounded-2xl border bg-white overflow-hidden ${status !== "pending" ? "opacity-60" : ""}`}>
       {/* Header */}
-      <button
-        type="button"
-        className="w-full flex items-start justify-between px-4 py-3 hover:bg-stone-50 transition-colors text-left"
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full flex items-start justify-between px-4 py-3 hover:bg-stone-50 transition-colors text-left cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); }}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -294,12 +311,23 @@ function ContributionCard({
             )}
           </div>
         </div>
-        {expanded ? (
-          <ChevronUp className="size-4 text-stone-400 shrink-0 mt-1" />
-        ) : (
-          <ChevronDown className="size-4 text-stone-400 shrink-0 mt-1" />
-        )}
-      </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            disabled={isDeleting}
+            title="Xóa đề xuất"
+            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-60 transition-colors"
+          >
+            {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+          </button>
+          {expanded ? (
+            <ChevronUp className="size-4 text-stone-400 mt-1" />
+          ) : (
+            <ChevronDown className="size-4 text-stone-400 mt-1" />
+          )}
+        </div>
+      </div>
 
       {expanded && (
         <div className="border-t border-stone-100 px-4 py-4 space-y-4">
@@ -589,9 +617,11 @@ export default function ContributionReview({ contributions, persons }: Props) {
               key={c.id}
               contribution={c}
               persons={persons}
-              onDone={() => {
-                // Refresh list status locally (page re-fetch on next nav)
-                setList((prev) => prev.map((item) => item.id === c.id ? { ...item } : item));
+              onStatusChange={(newStatus) => {
+                setList((prev) => prev.map((item) => item.id === c.id ? { ...item, status: newStatus } : item));
+              }}
+              onDelete={() => {
+                setList((prev) => prev.filter((item) => item.id !== c.id));
               }}
             />
           ))}

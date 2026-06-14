@@ -385,6 +385,31 @@ export async function updateContributionPayload(
   return { success: true };
 }
 
+// ── Admin: xóa đề xuất (mọi trạng thái) ──────────────────────
+
+export async function deleteContribution(
+  id: string,
+): Promise<{ success?: true; error?: string }> {
+  const profile = await getProfile();
+  if (profile?.role !== "admin") {
+    return { error: "Chỉ Admin mới có thể xóa đề xuất." };
+  }
+
+  const supabase = await getSupabase();
+  const { error } = await supabase
+    .from("contributions")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Failed to delete contribution:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard/contributions");
+  return { success: true };
+}
+
 // ── Admin: từ chối đề xuất ───────────────────────────────────
 
 export async function rejectContribution(

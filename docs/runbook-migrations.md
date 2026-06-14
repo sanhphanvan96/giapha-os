@@ -42,6 +42,31 @@ supabase db push        # apply lên production — không mất data
 
 > ⚠️ `supabase db reset` xóa toàn bộ local DB rồi chạy lại từ đầu — **mất data local**.
 
+## Setup env vars cho Web Push notifications (prod)
+
+Sau khi `supabase db push` migration `push_subscriptions`, cần set thêm env vars trên Vercel để tính năng push hoạt động trên prod:
+
+```bash
+# Lấy service_role key của project Supabase prod
+supabase projects api-keys
+
+# Link repo local với Vercel project (nếu chưa link)
+vercel link
+
+# Set các env vars production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
+vercel env add VAPID_PUBLIC_KEY production
+vercel env add VAPID_PRIVATE_KEY production
+vercel env add VAPID_SUBJECT production
+vercel env add NEXT_PUBLIC_VAPID_PUBLIC_KEY production
+```
+
+Ghi chú:
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` → cảnh báo prefix `NEXT_PUBLIC_`: chọn "Leave as is" (đúng ý đồ — public key, không phải secret), "Is sensitive secret?" → **n**.
+- `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY` → chọn sensitive (**y**).
+- `VAPID_SUBJECT` → `mailto:...` hoặc URL bất kỳ, không cần email thật, không phải secret.
+- VAPID keypair tạo bằng `npx web-push generate-vapid-keys`, có thể dùng chung 1 cặp cho local + prod.
+
 ## Troubleshooting
 
 **Migration bị lỡ, đã mark nhầm là applied:**
