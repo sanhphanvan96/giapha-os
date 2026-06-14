@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  ImageOff,
   Loader2,
   Pencil,
   Plus,
@@ -88,6 +89,27 @@ function FieldDiff({
         )}
       </div>
     </div>
+  );
+}
+
+// Ảnh tạm trên litterbox.catbox.moe hết hạn sau 72h → hiện placeholder thay vì icon vỡ ảnh
+function AvatarPreview({ src, className }: { src: string; className: string }) {
+  const [expired, setExpired] = useState(false);
+
+  if (expired) {
+    return (
+      <div
+        className={`${className} flex flex-col items-center justify-center gap-0.5 bg-stone-100 border-dashed text-stone-400 text-[10px] text-center leading-tight p-1`}
+      >
+        <ImageOff className="size-4" />
+        Hết hạn
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="Avatar đề xuất" className={className} onError={() => setExpired(true)} />
   );
 }
 
@@ -314,10 +336,8 @@ function ContributionCard({
                         <div className="flex items-center gap-3">
                           <div className="flex flex-col gap-0.5">
                             <span className="text-xs text-stone-400">Ảnh đề xuất:</span>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <AvatarPreview
                               src={edit.avatar_temp_url}
-                              alt="Avatar đề xuất"
                               className="size-14 rounded-xl object-cover border border-stone-200"
                             />
                           </div>
@@ -396,10 +416,8 @@ function ContributionCard({
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-xs text-stone-400">Ảnh đề xuất:</span>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <AvatarPreview
                             src={np.avatar_temp_url}
-                            alt="Avatar đề xuất"
                             className="size-14 rounded-xl object-cover border border-emerald-200"
                           />
                         </div>
