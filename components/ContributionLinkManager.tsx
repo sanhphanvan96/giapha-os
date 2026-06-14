@@ -120,14 +120,17 @@ export default function ContributionLinkManager({ initialLinks, persons }: Props
     <div className="space-y-4">
       {/* Nút tạo */}
       {!showCreate && (
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold transition-colors"
-        >
-          <Plus className="size-4" />
-          Tạo link đóng góp
-        </button>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <p className="text-xs text-stone-500 font-medium">Tạo liên kết đóng góp cho người thân</p>
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold transition-colors self-start sm:self-auto"
+          >
+            <Plus className="size-4" />
+            Tạo link đóng góp
+          </button>
+        </div>
       )}
 
       {/* Form tạo link */}
