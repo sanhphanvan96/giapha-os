@@ -86,7 +86,8 @@ export async function compressImage(
         );
       };
 
-      img.onerror = (err) => reject(new Error("Failed to load image for compression: " + err));
+      // Browser không decode được (heic, avif cũ...) → fallback upload file gốc thay vì lỗi
+      img.onerror = () => resolve(file);
     };
 
     reader.onerror = (err) => reject(new Error("Failed to read image file: " + err));

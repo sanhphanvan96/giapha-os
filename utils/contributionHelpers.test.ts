@@ -248,6 +248,10 @@ describe("isAllowedTempImageUrl", () => {
     expect(isAllowedTempImageUrl("https://litterbox.catbox.moe/x/y/z.png")).toBe(true);
   });
 
+  it("accepts HTTPS litter.catbox.moe URLs (host trả file thực tế)", () => {
+    expect(isAllowedTempImageUrl("https://litter.catbox.moe/abc123.webp")).toBe(true);
+  });
+
   it("rejects non-HTTPS schemes", () => {
     expect(isAllowedTempImageUrl("http://litterbox.catbox.moe/a.webp")).toBe(false);
     expect(isAllowedTempImageUrl("ftp://litterbox.catbox.moe/a.webp")).toBe(false);
@@ -259,6 +263,7 @@ describe("isAllowedTempImageUrl", () => {
       "https://evil.com/a.webp",
       "https://catbox.moe/a.webp",
       "https://litterbox.catbox.moe.evil.com/a.webp",
+      "https://litter.catbox.moe.evil.com/a.webp",
       "https://169.254.169.254/latest/meta-data/",
       "https://localhost/admin",
       "https://127.0.0.1:8080/",

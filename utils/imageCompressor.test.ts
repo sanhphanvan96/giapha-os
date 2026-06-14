@@ -94,6 +94,25 @@ describe("compressImage", () => {
     expect(result.name).toBe("photo.webp");
   });
 
+  test("should fall back to the original file when the browser cannot decode it (e.g. HEIC/AVIF)", async () => {
+    const OriginalImage = global.Image;
+    global.Image = class {
+      onload: (() => void) | null = null;
+      onerror: ((e: unknown) => void) | null = null;
+      set src(_value: string) {
+        setTimeout(() => {
+          if (this.onerror) this.onerror(new Error("decode error"));
+        }, 0);
+      }
+    } as any;
+
+    const file = new File(["dummy heic content"], "photo.heic", { type: "image/heic" });
+    const result = await compressImage(file, { outputType: "image/webp" });
+
+    expect(result).toBe(file);
+    global.Image = OriginalImage;
+  });
+
   test("should correctly resize a large image (2000x1000) preserving aspect ratio within limits", async () => {
     const file = new File(["dummy png content"], "large-photo.png", { type: "image/png" });
     

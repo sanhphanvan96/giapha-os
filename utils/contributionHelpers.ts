@@ -1,5 +1,8 @@
-/** Host duy nhất được phép cho ảnh tạm của contribution (chống SSRF). */
-export const ALLOWED_TEMP_IMAGE_HOST = "litterbox.catbox.moe";
+/**
+ * Hosts cho phép cho ảnh tạm của contribution (chống SSRF).
+ * litterbox.catbox.moe = endpoint upload; litter.catbox.moe = host trả về file thực tế.
+ */
+export const ALLOWED_TEMP_IMAGE_HOSTS = ["litterbox.catbox.moe", "litter.catbox.moe"];
 
 /** true nếu url là HTTPS và đúng host litterbox. Mọi input khác → false. */
 export function isAllowedTempImageUrl(url: string): boolean {
@@ -11,7 +14,7 @@ export function isAllowedTempImageUrl(url: string): boolean {
   }
   return (
     parsed.protocol === "https:" &&
-    parsed.hostname === ALLOWED_TEMP_IMAGE_HOST
+    (ALLOWED_TEMP_IMAGE_HOSTS as string[]).includes(parsed.hostname)
   );
 }
 
