@@ -93,10 +93,12 @@ function GenderSelect({
 // ── AvatarUploadField — upload ảnh tạm (litterbox, best-effort) ─────────────
 function AvatarUploadField({
   avatarUrl,
+  currentAvatarUrl,
   onUpload,
   onRemove,
 }: {
   avatarUrl: string | null | undefined;
+  currentAvatarUrl?: string | null;
   onUpload: (url: string) => void;
   onRemove: () => void;
 }) {
@@ -160,24 +162,37 @@ function AvatarUploadField({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-          className="flex items-center gap-2 px-3 h-9 rounded-xl border border-dashed border-stone-300 hover:border-stone-400 hover:bg-stone-50 disabled:opacity-60 text-sm text-stone-500 transition-colors w-fit"
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Đang tải lên...
-            </>
-          ) : (
-            <>
-              <Camera className="size-4" />
-              Chọn ảnh
-            </>
+        <div className="flex items-center gap-3">
+          {currentAvatarUrl && (
+            <div className="flex flex-col gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={currentAvatarUrl}
+                alt="Ảnh hiện tại"
+                className="size-16 rounded-xl object-cover border border-stone-200"
+              />
+              <span className="text-[10px] text-stone-400 text-center">Ảnh hiện tại</span>
+            </div>
           )}
-        </button>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="flex items-center gap-2 px-3 h-9 rounded-xl border border-dashed border-stone-300 hover:border-stone-400 hover:bg-stone-50 disabled:opacity-60 text-sm text-stone-500 transition-colors w-fit"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Đang tải lên...
+              </>
+            ) : (
+              <>
+                <Camera className="size-4" />
+                {currentAvatarUrl ? "Đổi ảnh" : "Chọn ảnh"}
+              </>
+            )}
+          </button>
+        </div>
       )}
       {uploadError && (
         <p className="text-xs text-red-500">{uploadError}</p>
@@ -523,6 +538,7 @@ function EditPersonPanel({
           {/* Ảnh đại diện */}
           <AvatarUploadField
             avatarUrl={edit.avatar_temp_url}
+            currentAvatarUrl={person.avatar_url}
             onUpload={onAvatarChange}
             onRemove={() => onAvatarChange(null)}
           />

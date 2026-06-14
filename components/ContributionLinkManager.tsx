@@ -23,7 +23,7 @@ import PersonSelector from "./PersonSelector";
 
 interface Props {
   initialLinks: ContributionLink[];
-  persons: Pick<Person, "id" | "full_name" | "other_names" | "gender" | "birth_year">[];
+  persons: Pick<Person, "id" | "full_name" | "other_names" | "gender" | "birth_year" | "avatar_url" | "generation">[];
 }
 
 function formatExpiry(expiresAt: string) {
