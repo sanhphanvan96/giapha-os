@@ -57,15 +57,12 @@ export default function AdminSharingList({
 
   return (
     <div className="space-y-6">
-      {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-white p-4 rounded-2xl border border-stone-200">
-        <div>
-          <h3 className="font-serif font-bold text-stone-850 text-lg">Hành động</h3>
-          <p className="text-xs text-stone-500 font-medium">Tạo liên kết chia sẻ cho dòng họ</p>
-        </div>
+      {/* Nút tạo */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <p className="text-xs text-stone-500 font-medium">Tạo liên kết chia sẻ cho dòng họ</p>
         <button
           onClick={() => setIsShareModalOpen(true)}
-          className="btn-amber text-sm font-bold flex items-center gap-1.5 self-start sm:self-auto"
+          className="flex items-center gap-2 px-4 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold transition-colors self-start sm:self-auto"
         >
           <Plus className="size-4" />
           Tạo liên kết mới

@@ -6,6 +6,7 @@ const isLocalDev =
 
 const nextConfig: NextConfig = {
   output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
+  serverExternalPackages: ["web-push"],
   images: {
     // In local dev (Supabase local), bypass Next.js Image Optimization entirely.
     // The optimization server cannot fetch from private IPs (127.0.0.1).
