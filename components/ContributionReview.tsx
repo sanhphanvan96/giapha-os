@@ -299,7 +299,7 @@ function ContributionCard({
               {cfg.label}
             </span>
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-stone-400">
+          <div className="flex items-center gap-3 mt-1 text-xs text-stone-400 flex-wrap">
             <span>{new Date(contribution.created_at).toLocaleString("vi-VN")}</span>
             <span>
               {contribution.payload.edits.length > 0 && `${contribution.payload.edits.length} chỉnh sửa`}
@@ -317,14 +317,14 @@ function ContributionCard({
             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
             disabled={isDeleting}
             title="Xóa đề xuất"
-            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-60 transition-colors"
+            className="size-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-60 transition-colors"
           >
             {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
           </button>
           {expanded ? (
-            <ChevronUp className="size-4 text-stone-400 mt-1" />
+            <ChevronUp className="size-4 text-stone-400" />
           ) : (
-            <ChevronDown className="size-4 text-stone-400 mt-1" />
+            <ChevronDown className="size-4 text-stone-400" />
           )}
         </div>
       </div>
@@ -591,7 +591,7 @@ export default function ContributionReview({ contributions, persons }: Props) {
   return (
     <div className="space-y-4">
       {/* Filter tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {(["pending", "approved", "rejected", "all"] as const).map((f) => (
           <button
             key={f}

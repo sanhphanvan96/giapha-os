@@ -97,7 +97,7 @@ export default function PushSubscribeToggle() {
         type="button"
         onClick={handleUnsubscribe}
         disabled={pending}
-        className="flex items-center gap-1.5 px-3 h-9 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-60 text-emerald-700 text-sm font-medium transition-colors"
+        className="flex items-center gap-1.5 px-3 h-10 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-60 text-emerald-700 text-sm font-medium transition-colors"
       >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <BellRing className="size-4" />}
         Đã bật thông báo
@@ -110,7 +110,7 @@ export default function PushSubscribeToggle() {
       type="button"
       onClick={handleSubscribe}
       disabled={pending}
-      className="flex items-center gap-1.5 px-3 h-9 rounded-xl border border-stone-200 hover:bg-stone-50 disabled:opacity-60 text-stone-600 text-sm font-medium transition-colors"
+      className="flex items-center gap-1.5 px-3 h-10 rounded-xl border border-stone-200 hover:bg-stone-50 disabled:opacity-60 text-stone-600 text-sm font-medium transition-colors"
     >
       {pending ? (
         <Loader2 className="size-4 animate-spin" />
